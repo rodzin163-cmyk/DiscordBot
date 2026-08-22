@@ -67,6 +67,7 @@ db = psycopg2.connect(
 
 cursor = db.cursor()
 
+print("DATABASE POSTGRESQL LIGADA")
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS jogadores (
