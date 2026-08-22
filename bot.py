@@ -893,6 +893,40 @@ async def treinar(ctx, tipo: str):
     if not isinstance(ctx.author, discord.Member):
         return
 
+# ============================================================
+# LIMITE DIÁRIO DE TREINOS (3 POR DIA)
+# ============================================================
+
+    hoje = datetime.now(timezone.utc).date().isoformat()
+
+    cursor.execute(
+        """
+        SELECT COUNT(*)
+        FROM treinos
+        WHERE user_id = ?
+        AND DATE(inicio) = ?
+        AND aguardando_acao = 0
+        """,
+        (
+            ctx.author.id,
+            hoje
+        )
+    )
+
+    treinos_hoje = cursor.fetchone()[0]
+
+
+    if treinos_hoje >= 3:
+
+        await ctx.send(
+            f"❌ {ctx.author.mention}, atingiste o limite diário de treinos.\n\n"
+            f"🏋️ Limite máximo: **3 treinos por dia**.\n"
+            f"Volta amanhã para treinar novamente."
+        )
+
+        return
+
+
     tipo = tipo.lower().strip()
 
     if tipo not in TREINOS:
