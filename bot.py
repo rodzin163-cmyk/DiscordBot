@@ -1624,6 +1624,19 @@ async def perfil(ctx):
 
     await ctx.send(embed=embed)
 
+# ============================================================
+# TESTE MYSTERY BOX
+# ============================================================
+
+@bot.command()
+async def testebox(ctx):
+
+    adicionar_mysterybox(ctx.author.id, 1)
+
+    await ctx.send(
+        f"🎁 {ctx.author.mention}, recebeste 1 Mystery Box de teste!"
+    )
+
 
 # ============================================================
 # TOKEN
