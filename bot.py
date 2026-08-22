@@ -242,6 +242,39 @@ def obter_jogador(user_id):
 
     return cursor.fetchone()
 
+# ============================================================
+# SISTEMA DE NÍVEIS
+# ============================================================
+
+def criar_nivel(user_id):
+
+    cursor.execute(
+        """
+        INSERT INTO niveis (user_id)
+        VALUES (%s)
+        ON CONFLICT (user_id) DO NOTHING
+        """,
+        (user_id,)
+    )
+
+    db.commit()
+
+
+def obter_nivel(user_id):
+
+    criar_nivel(user_id)
+
+    cursor.execute(
+        """
+        SELECT xp, level
+        FROM niveis
+        WHERE user_id = %s
+        """,
+        (user_id,)
+    )
+
+    return cursor.fetchone()
+
 
 # ============================================================
 # FUNÇÕES DE CARGOS
