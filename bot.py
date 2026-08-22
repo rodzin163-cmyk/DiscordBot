@@ -432,6 +432,114 @@ async def verificar_treinos():
 
         await asyncio.sleep(30)
 
+# ============================================================
+# !ADDATRIBUTO (STAFF)
+# ============================================================
+
+@bot.command()
+async def addatributo(ctx, membro: discord.Member = None, atributo: str = None, quantidade: int = None):
+
+    cargos_staff = [
+        1388566955069280287,  # Moderador
+        1388566858390573246,  # ADM
+        1386441239125295237   # Fundador
+    ]
+
+    if not any(cargo.id in cargos_staff for cargo in ctx.author.roles):
+        await ctx.send("❌ Não tens permissão para usar este comando.")
+        return
+
+    if membro is None or atributo is None or quantidade is None:
+        await ctx.send(
+            "❌ Uso correto:\n"
+            "`!addatributo @jogador atributo quantidade`\n\n"
+            "Exemplo:\n"
+            "`!addatributo @jogador força 100`"
+        )
+        return
+
+    atributos_validos = {
+        "velocidade": "velocidade",
+        "forca": "forca",
+        "força": "forca",
+        "resistencia": "resistencia",
+        "resistência": "resistencia",
+        "manejo": "manejo",
+        "regeneracao": "regeneracao",
+        "regeneração": "regeneracao",
+        "folego": "folego",
+        "fôlego": "folego",
+        "sangue": "sangue"
+    }
+
+    atributo = atributo.lower()
+
+    if atributo not in atributos_validos:
+        await ctx.send(
+            "❌ Atributo inválido.\n\n"
+            "Usa:\n"
+            "⚡ velocidade\n"
+            "💪 força\n"
+            "🛡️ resistência\n"
+            "⚔️ manejo\n"
+            "🩸 regeneração\n"
+            "🌬️ fôlego\n"
+            "🩸 sangue"
+        )
+        return
+
+    coluna = atributos_validos[atributo]
+
+    if quantidade <= 0:
+        await ctx.send("❌ A quantidade tem de ser maior que 0.")
+        return
+
+    cursor.execute(
+        "SELECT * FROM atributos WHERE user_id = ?",
+        (membro.id,)
+    )
+
+    dados = cursor.fetchone()
+
+    if not dados:
+        await ctx.send("❌ Esse jogador ainda não possui atributos.")
+        return
+
+    tipo = obter_tipo(membro)
+
+    limite = 1000
+
+    if tipo in ["oni", "hibrido"]:
+        limite = 1150
+
+    valor_atual = dados[coluna]
+
+    novo_valor = valor_atual + quantidade
+
+    if novo_valor > limite:
+        novo_valor = limite
+
+    ganho = novo_valor - valor_atual
+
+    cursor.execute(
+        f"""
+        UPDATE atributos
+        SET {coluna} = ?
+        WHERE user_id = ?
+        """,
+        (novo_valor, membro.id)
+    )
+
+    db.commit()
+
+    await ctx.send(
+        f"✅ **Atributo atualizado!**\n\n"
+        f"👤 Jogador: {membro.mention}\n"
+        f"📊 Atributo: **{coluna.capitalize()}**\n"
+        f"➕ Pontos adicionados: **+{ganho}**\n"
+        f"📈 Atual: **{novo_valor}/{limite}**"
+    )
+
 
 # ============================================================
 # !HELP
