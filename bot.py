@@ -1143,7 +1143,7 @@ async def treinar(ctx, tipo: str):
             check=verificar_mensagem
         )
 
-except asyncio.TimeoutError:
+    except asyncio.TimeoutError:
 
     cursor.execute(
         "DELETE FROM treinos WHERE user_id = %s",
