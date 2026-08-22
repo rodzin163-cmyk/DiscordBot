@@ -454,65 +454,59 @@ async def addatributo(ctx, membro: discord.Member = None, atributo: str = None, 
             "❌ Uso correto:\n"
             "`!addatributo @jogador atributo quantidade`\n\n"
             "Exemplo:\n"
-            "`!addatributo @jogador força 100`"
+            "`!addatributo @jogador forca 100`"
         )
         return
 
-    atributos_validos = {
-        "velocidade": "velocidade",
-        "forca": "forca",
-        "força": "forca",
-        "resistencia": "resistencia",
-        "resistência": "resistencia",
-        "manejo": "manejo",
-        "regeneracao": "regeneracao",
-        "regeneração": "regeneracao",
-        "folego": "folego",
-        "fôlego": "folego",
-        "sangue": "sangue"
-    }
+    atributos_validos = [
+        "velocidade",
+        "forca",
+        "resistencia",
+        "manejo",
+        "regeneracao",
+        "folego",
+        "sangue"
+    ]
 
     atributo = atributo.lower()
 
     if atributo not in atributos_validos:
         await ctx.send(
-            "❌ Atributo inválido.\n\n"
-            "Usa:\n"
-            "⚡ velocidade\n"
-            "💪 força\n"
-            "🛡️ resistência\n"
-            "⚔️ manejo\n"
-            "🩸 regeneração\n"
-            "🌬️ fôlego\n"
-            "🩸 sangue"
+            "❌ Atributo inválido."
         )
         return
 
-    coluna = atributos_validos[atributo]
-
-    if quantidade <= 0:
-        await ctx.send("❌ A quantidade tem de ser maior que 0.")
-        return
-
     cursor.execute(
-        "SELECT * FROM atributos WHERE user_id = ?",
+        "SELECT * FROM jogadores WHERE user_id = ?",
         (membro.id,)
     )
 
-    dados = cursor.fetchone()
+    jogador = cursor.fetchone()
 
-    if not dados:
-        await ctx.send("❌ Esse jogador ainda não possui atributos.")
+    if jogador is None:
+        await ctx.send("❌ Esse jogador ainda não tem atributos.")
         return
 
-    tipo = obter_tipo(membro)
-
     limite = 1000
+
+    # Oni e híbrido podem ir até 1150
+    tipo = obter_tipo(membro)
 
     if tipo in ["oni", "hibrido"]:
         limite = 1150
 
-    valor_atual = dados[coluna]
+    # posição da coluna
+    colunas = {
+        "velocidade": 2,
+        "forca": 3,
+        "resistencia": 4,
+        "manejo": 5,
+        "regeneracao": 6,
+        "folego": 7,
+        "sangue": 8
+    }
+
+    valor_atual = jogador[colunas[atributo]]
 
     novo_valor = valor_atual + quantidade
 
@@ -523,8 +517,8 @@ async def addatributo(ctx, membro: discord.Member = None, atributo: str = None, 
 
     cursor.execute(
         f"""
-        UPDATE atributos
-        SET {coluna} = ?
+        UPDATE jogadores
+        SET {atributo} = ?
         WHERE user_id = ?
         """,
         (novo_valor, membro.id)
@@ -535,8 +529,8 @@ async def addatributo(ctx, membro: discord.Member = None, atributo: str = None, 
     await ctx.send(
         f"✅ **Atributo atualizado!**\n\n"
         f"👤 Jogador: {membro.mention}\n"
-        f"📊 Atributo: **{coluna.capitalize()}**\n"
-        f"➕ Pontos adicionados: **+{ganho}**\n"
+        f"📊 Atributo: **{atributo.capitalize()}**\n"
+        f"➕ Adicionado: **+{ganho} pontos**\n"
         f"📈 Atual: **{novo_valor}/{limite}**"
     )
 
@@ -593,12 +587,15 @@ async def help(ctx):
 
     embed.add_field(
         name="🛡️ Staff",
-        value=(
-            "`!givepoints @jogador <quantidade>`\n"
-            "Adiciona pontos ao inventário de um jogador."
-        ),
-        inline=False
-    )
+value=(
+    "`!givepoints @jogador <quantidade>`\n"
+    "Adiciona pontos ao inventário de um jogador.\n\n"
+
+    "`!addatributo @jogador <atributo> <quantidade>`\n"
+    "Adiciona pontos diretamente nos atributos de um jogador (Staff)."
+),
+inline=False
+)
 
     embed.set_footer(
         text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ • Sistema de Atributos e Treinos"
