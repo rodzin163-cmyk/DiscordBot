@@ -243,6 +243,75 @@ def obter_jogador(user_id):
     return cursor.fetchone()
 
 # ============================================================
+# SISTEMA DE MYSTERY BOX
+# ============================================================
+
+def criar_mysterybox(user_id):
+
+    cursor.execute(
+        """
+        INSERT INTO mysteryboxes (user_id)
+        VALUES (%s)
+        ON CONFLICT (user_id) DO NOTHING
+        """,
+        (user_id,)
+    )
+
+    db.commit()
+
+
+def obter_mysterybox(user_id):
+
+    criar_mysterybox(user_id)
+
+    cursor.execute(
+        """
+        SELECT quantidade
+        FROM mysteryboxes
+        WHERE user_id = %s
+        """,
+        (user_id,)
+    )
+
+    return cursor.fetchone()[0]
+
+
+def adicionar_mysterybox(user_id, quantidade=1):
+
+    criar_mysterybox(user_id)
+
+    cursor.execute(
+        """
+        UPDATE mysteryboxes
+        SET quantidade = quantidade + %s
+        WHERE user_id = %s
+        """,
+        (
+            quantidade,
+            user_id
+        )
+    )
+
+    db.commit()
+
+
+def remover_mysterybox(user_id, quantidade=1):
+
+    cursor.execute(
+        """
+        UPDATE mysteryboxes
+        SET quantidade = quantidade - %s
+        WHERE user_id = %s
+        """,
+        (
+            quantidade,
+            user_id
+        )
+    )
+
+    db.commit()
+
+# ============================================================
 # SISTEMA DE NÍVEIS
 # ============================================================
 
@@ -299,6 +368,10 @@ def adicionar_xp(user_id, quantidade):
 
         novo_xp -= xp_necessario
         novo_level += 1
+
+        if novo_level % 10 == 0:
+
+            adicionar_mysterybox(user_id, 1)
 
         xp_necessario = xp_para_proximo_level(novo_level)
 
