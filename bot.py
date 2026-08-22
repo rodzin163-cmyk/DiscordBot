@@ -718,6 +718,16 @@ async def help(ctx):
     )
 
     embed.add_field(
+    name="📈 Progressão",
+    value=(
+        "⭐ `!level` - Ver o teu nível e XP\n"
+        "🎒 `!inventario` - Ver os teus itens\n"
+        "🎁 `!mysterybox` - Sistema de Mystery Boxes"
+    ),
+    inline=False
+)
+
+    embed.add_field(
         name="🏋️ Treinos",
         value=(
             "`!treinar iniciante`\n"
@@ -1462,6 +1472,31 @@ async def finalizar(ctx):
         f"🏋️ Treino: **{TREINOS[tipo]['nome']}**\n"
         f"📦 Pontos recebidos: **+{pontos}**\n"
         f"💰 Inventário atual: **{total} pontos**"
+    )
+
+# ============================================================
+# !LEVEL
+# ============================================================
+
+@bot.command()
+async def level(ctx):
+
+    jogador = obter_nivel(ctx.author.id)
+
+    xp = jogador[0]
+    nivel = jogador[1]
+
+    xp_necessario = xp_para_proximo_level(nivel)
+
+    progresso = int((xp / xp_necessario) * 10)
+
+    barra = "█" * progresso + "░" * (10 - progresso)
+
+    await ctx.send(
+        f"⚔️ **{ctx.author.display_name}**\n\n"
+        f"⭐ Level: **{nivel}**\n"
+        f"✨ XP: **{xp}/{xp_necessario}**\n\n"
+        f"{barra}"
     )
 
 
