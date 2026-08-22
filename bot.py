@@ -220,7 +220,11 @@ LIMITES = {
 def criar_jogador(user_id):
 
     cursor.execute(
-        "INSERT OR IGNORE INTO jogadores (user_id) VALUES (?)",
+        """
+        INSERT INTO jogadores (user_id)
+        VALUES (%s)
+        ON CONFLICT (user_id) DO NOTHING
+        """,
         (user_id,)
     )
 
@@ -232,7 +236,7 @@ def obter_jogador(user_id):
     criar_jogador(user_id)
 
     cursor.execute(
-        "SELECT * FROM jogadores WHERE user_id = ?",
+        "SELECT * FROM jogadores WHERE user_id = %s",
         (user_id,)
     )
 
@@ -342,13 +346,12 @@ def obter_treino(user_id):
         SELECT user_id, tipo, canal_id, inicio,
                termino, pontos, aguardando_acao
         FROM treinos
-        WHERE user_id = ?
+        WHERE user_id = %s
         """,
         (user_id,)
     )
 
     return cursor.fetchone()
-
 
 # ============================================================
 # BOT ONLINE
@@ -393,6 +396,7 @@ async def verificar_treinos():
             pontos = treino[4]
 
             try:
+
                 termino_data = datetime.fromisoformat(termino)
 
                 if agora >= termino_data:
@@ -400,14 +404,20 @@ async def verificar_treinos():
                     cursor.execute(
                         """
                         UPDATE jogadores
-                        SET pontos = pontos + ?
-                        WHERE user_id = ?
+                        SET pontos = pontos + %s
+                        WHERE user_id = %s
                         """,
-                        (pontos, user_id)
+                        (
+                            pontos,
+                            user_id
+                        )
                     )
 
                     cursor.execute(
-                        "DELETE FROM treinos WHERE user_id = ?",
+                        """
+                        DELETE FROM treinos
+                        WHERE user_id = %s
+                        """,
                         (user_id,)
                     )
 
