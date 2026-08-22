@@ -1186,10 +1186,10 @@ except asyncio.TimeoutError:
     cursor.execute(
         """
         UPDATE treinos
-        SET inicio = ?,
-            termino = ?,
+        SET inicio = %s,
+            termino = %s,
             aguardando_acao = 0
-        WHERE user_id = ?
+        WHERE user_id = %s
         """,
         (
             inicio.isoformat(),
@@ -1237,7 +1237,7 @@ async def cancelar(ctx):
     aguardando_acao = treino[6]
 
     cursor.execute(
-        "DELETE FROM treinos WHERE user_id = ?",
+        "DELETE FROM treinos WHERE user_id = %s",
         (ctx.author.id,)
     )
 
@@ -1332,8 +1332,8 @@ async def finalizar(ctx):
     cursor.execute(
         """
         UPDATE jogadores
-        SET pontos = pontos + ?
-        WHERE user_id = ?
+        SET pontos = pontos + %s
+        WHERE user_id = %s
         """,
         (
             pontos,
@@ -1342,7 +1342,7 @@ async def finalizar(ctx):
     )
 
     cursor.execute(
-        "DELETE FROM treinos WHERE user_id = ?",
+        "DELETE FROM treinos WHERE user_id = %s",
         (ctx.author.id,)
     )
 
