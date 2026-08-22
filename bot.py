@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-import sqlite3
+import psycopg2
 import asyncio
 import math
 import os
@@ -61,7 +61,10 @@ bot = commands.Bot(
 # BASE DE DADOS
 # ============================================================
 
-db = sqlite3.connect("database.db", check_same_thread=False)
+db = psycopg2.connect(
+    os.environ["DATABASE_URL"]
+)
+
 cursor = db.cursor()
 
 
