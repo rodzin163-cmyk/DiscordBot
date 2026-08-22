@@ -275,6 +275,53 @@ def obter_nivel(user_id):
 
     return cursor.fetchone()
 
+# ============================================================
+# FUNÇÕES DO SISTEMA DE NÍVEIS
+# ============================================================
+
+def xp_para_proximo_level(level):
+
+    return math.floor(
+        100 * (level ** 1.5)
+    )
+
+
+def adicionar_xp(user_id, quantidade):
+
+    xp_atual, level_atual = obter_nivel(user_id)
+
+    novo_xp = xp_atual + quantidade
+    novo_level = level_atual
+
+    xp_necessario = xp_para_proximo_level(level_atual)
+
+    while novo_xp >= xp_necessario:
+
+        novo_xp -= xp_necessario
+        novo_level += 1
+
+        xp_necessario = xp_para_proximo_level(novo_level)
+
+
+    cursor.execute(
+        """
+        UPDATE niveis
+        SET xp = %s,
+            level = %s
+        WHERE user_id = %s
+        """,
+        (
+            novo_xp,
+            novo_level,
+            user_id
+        )
+    )
+
+    db.commit()
+
+
+    return novo_level > level_atual, novo_level
+
 
 # ============================================================
 # FUNÇÕES DE CARGOS
@@ -397,6 +444,32 @@ async def on_ready():
     print(f"ID: {bot.user.id}")
 
     bot.loop.create_task(verificar_treinos())
+
+
+# ============================================================
+# SISTEMA DE XP POR MENSAGEM
+# ============================================================
+
+@bot.event
+async def on_message(message):
+
+    if message.author.bot:
+        return
+
+    xp_ganho = 5
+
+    subiu, novo_level = adicionar_xp(
+        message.author.id,
+        xp_ganho
+    )
+
+    if subiu:
+
+        await message.channel.send(
+            f"🎉 {message.author.mention} subiu para o **Level {novo_level}**!"
+        )
+
+    await bot.process_commands(message)
 
 
 # ============================================================
