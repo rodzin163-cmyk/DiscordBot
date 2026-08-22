@@ -23,5 +23,6 @@ jobs:
       - name: Iniciar bot
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           python bot.py
