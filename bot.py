@@ -1145,20 +1145,20 @@ async def treinar(ctx, tipo: str):
 
     except asyncio.TimeoutError:
 
-    cursor.execute(
-        "DELETE FROM treinos WHERE user_id = %s",
-        (ctx.author.id,)
-    )
+        cursor.execute(
+            "DELETE FROM treinos WHERE user_id = %s",
+            (ctx.author.id,)
+        )
 
-    db.commit()
+        db.commit()
 
-    await ctx.send(
-        f"❌ {ctx.author.mention}, o tempo de **15 minutos** "
-        f"para enviar a ação acabou.\n"
-        f"O treino foi **cancelado**."
-    )
+        await ctx.send(
+            f"❌ {ctx.author.mention}, o tempo de **15 minutos** "
+            f"para enviar a ação acabou.\n"
+            f"O treino foi **cancelado**."
+        )
 
-    return
+        return
 
     quantidade_caracteres = len(mensagem.content)
 
