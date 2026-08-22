@@ -71,7 +71,7 @@ print("DATABASE POSTGRESQL LIGADA")
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS jogadores (
-    user_id INTEGER PRIMARY KEY,
+    user_id BIGINT PRIMARY KEY,
     pontos INTEGER DEFAULT 0,
     velocidade INTEGER DEFAULT 0,
     forca INTEGER DEFAULT 0,
@@ -86,9 +86,9 @@ CREATE TABLE IF NOT EXISTS jogadores (
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS treinos (
-    user_id INTEGER PRIMARY KEY,
+    user_id BIGINT PRIMARY KEY,
     tipo TEXT NOT NULL,
-    canal_id INTEGER NOT NULL,
+    canal_id BIGINT NOT NULL,
     inicio TEXT NOT NULL,
     termino TEXT NOT NULL,
     pontos INTEGER NOT NULL,
