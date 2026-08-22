@@ -459,18 +459,27 @@ async def addatributo(ctx, membro: discord.Member = None, atributo: str = None, 
         1386441239125295237   # Fundador
     ]
 
+
     if not any(cargo.id in cargos_staff for cargo in ctx.author.roles):
-        await ctx.send("❌ Não tens permissão para usar este comando.")
+
+        await ctx.send(
+            "❌ Não tens permissão para usar este comando."
+        )
+
         return
 
+
     if membro is None or atributo is None or quantidade is None:
+
         await ctx.send(
             "❌ Uso correto:\n"
             "`!addatributo @jogador atributo quantidade`\n\n"
             "Exemplo:\n"
             "`!addatributo @jogador forca 100`"
         )
+
         return
+
 
     atributos_validos = [
         "velocidade",
@@ -482,34 +491,48 @@ async def addatributo(ctx, membro: discord.Member = None, atributo: str = None, 
         "sangue"
     ]
 
+
     atributo = atributo.lower()
 
+
     if atributo not in atributos_validos:
+
         await ctx.send(
             "❌ Atributo inválido."
         )
+
         return
 
+
     cursor.execute(
-        "SELECT * FROM jogadores WHERE user_id = ?",
+        "SELECT * FROM jogadores WHERE user_id = %s",
         (membro.id,)
     )
 
     jogador = cursor.fetchone()
 
+
     if jogador is None:
-        await ctx.send("❌ Esse jogador ainda não tem atributos.")
+
+        await ctx.send(
+            "❌ Esse jogador ainda não tem atributos."
+        )
+
         return
 
+
     limite = 1000
+
 
     # Oni e híbrido podem ir até 1150
     tipo = obter_tipo(membro)
 
+
     if tipo in ["oni", "hibrido"]:
+
         limite = 1150
 
-    # posição da coluna
+
     colunas = {
         "velocidade": 2,
         "forca": 3,
@@ -520,25 +543,36 @@ async def addatributo(ctx, membro: discord.Member = None, atributo: str = None, 
         "sangue": 8
     }
 
+
     valor_atual = jogador[colunas[atributo]]
+
 
     novo_valor = valor_atual + quantidade
 
+
     if novo_valor > limite:
+
         novo_valor = limite
 
+
     ganho = novo_valor - valor_atual
+
 
     cursor.execute(
         f"""
         UPDATE jogadores
-        SET {atributo} = ?
-        WHERE user_id = ?
+        SET {atributo} = %s
+        WHERE user_id = %s
         """,
-        (novo_valor, membro.id)
+        (
+            novo_valor,
+            membro.id
+        )
     )
 
+
     db.commit()
+
 
     await ctx.send(
         f"✅ **Atributo atualizado!**\n\n"
@@ -724,6 +758,7 @@ async def add(ctx, quantidade: int, *, atributo: str):
     if not isinstance(ctx.author, discord.Member):
         return
 
+
     if quantidade <= 0:
 
         await ctx.send(
@@ -732,7 +767,9 @@ async def add(ctx, quantidade: int, *, atributo: str):
 
         return
 
+
     tipo = obter_tipo(ctx.author)
+
 
     if tipo is None:
 
@@ -742,9 +779,11 @@ async def add(ctx, quantidade: int, *, atributo: str):
 
         return
 
+
     jogador = obter_jogador(ctx.author.id)
 
     pontos = jogador[1]
+
 
     if quantidade > pontos:
 
@@ -755,7 +794,9 @@ async def add(ctx, quantidade: int, *, atributo: str):
 
         return
 
+
     atributo = atributo.lower().strip()
+
 
     nomes = {
         "velocidade": "velocidade",
@@ -779,6 +820,7 @@ async def add(ctx, quantidade: int, *, atributo: str):
         "sangue": "sangue"
     }
 
+
     if atributo not in nomes:
 
         await ctx.send(
@@ -787,7 +829,9 @@ async def add(ctx, quantidade: int, *, atributo: str):
 
         return
 
+
     atributo = nomes[atributo]
+
 
     if atributo not in ATRIBUTOS_PERMITIDOS[tipo]:
 
@@ -798,14 +842,18 @@ async def add(ctx, quantidade: int, *, atributo: str):
 
         return
 
+
     limite = LIMITES[tipo]
 
+
     cursor.execute(
-        f"SELECT {atributo} FROM jogadores WHERE user_id = ?",
+        f"SELECT {atributo} FROM jogadores WHERE user_id = %s",
         (ctx.author.id,)
     )
 
+
     atual = cursor.fetchone()[0]
+
 
     if atual + quantidade > limite:
 
@@ -819,14 +867,17 @@ async def add(ctx, quantidade: int, *, atributo: str):
 
         return
 
+
     novo_valor = atual + quantidade
     novos_pontos = pontos - quantidade
+
 
     cursor.execute(
         f"""
         UPDATE jogadores
-        SET {atributo} = ?, pontos = ?
-        WHERE user_id = ?
+        SET {atributo} = %s,
+            pontos = %s
+        WHERE user_id = %s
         """,
         (
             novo_valor,
@@ -835,7 +886,9 @@ async def add(ctx, quantidade: int, *, atributo: str):
         )
     )
 
+
     db.commit()
+
 
     await ctx.send(
         f"✅ **{ATRIBUTOS[atributo]['nome']}** aumentou!\n\n"
@@ -843,7 +896,6 @@ async def add(ctx, quantidade: int, *, atributo: str):
         f"**{atual} → {novo_valor}**\n"
         f"📦 Pontos restantes: **{novos_pontos}**"
     )
-
 
 # ============================================================
 # !GIVEPOINTS
@@ -855,6 +907,7 @@ async def givepoints(ctx, membro: discord.Member, quantidade: int):
     if not isinstance(ctx.author, discord.Member):
         return
 
+
     if not eh_staff(ctx.author):
 
         await ctx.send(
@@ -862,6 +915,7 @@ async def givepoints(ctx, membro: discord.Member, quantidade: int):
         )
 
         return
+
 
     if quantidade <= 0:
 
@@ -871,13 +925,15 @@ async def givepoints(ctx, membro: discord.Member, quantidade: int):
 
         return
 
+
     criar_jogador(membro.id)
+
 
     cursor.execute(
         """
         UPDATE jogadores
-        SET pontos = pontos + ?
-        WHERE user_id = ?
+        SET pontos = pontos + %s
+        WHERE user_id = %s
         """,
         (
             quantidade,
@@ -885,11 +941,14 @@ async def givepoints(ctx, membro: discord.Member, quantidade: int):
         )
     )
 
+
     db.commit()
+
 
     jogador = obter_jogador(membro.id)
 
     total = jogador[1]
+
 
     await ctx.send(
         f"✅ {membro.mention} recebeu **{quantidade} pontos**.\n"
@@ -914,18 +973,18 @@ async def treinar(ctx, tipo: str):
     hoje = datetime.now(timezone.utc).date().isoformat()
 
     cursor.execute(
-        """
-        SELECT COUNT(*)
-        FROM treinos
-        WHERE user_id = ?
-        AND DATE(inicio) = ?
-        AND aguardando_acao = 0
-        """,
-        (
-            ctx.author.id,
-            hoje
-        )
+    """
+    SELECT COUNT(*)
+    FROM treinos
+    WHERE user_id = %s
+    AND DATE(inicio) = %s
+    AND aguardando_acao = 0
+    """,
+    (
+        ctx.author.id,
+        hoje
     )
+)
 
     treinos_hoje = cursor.fetchone()[0]
 
@@ -1019,7 +1078,7 @@ async def treinar(ctx, tipo: str):
         """
         INSERT INTO treinos
         (user_id, tipo, canal_id, inicio, termino, pontos, aguardando_acao)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         """,
         (
             ctx.author.id,
@@ -1084,29 +1143,29 @@ async def treinar(ctx, tipo: str):
             check=verificar_mensagem
         )
 
-    except asyncio.TimeoutError:
+except asyncio.TimeoutError:
 
-        cursor.execute(
-            "DELETE FROM treinos WHERE user_id = ?",
-            (ctx.author.id,)
-        )
+    cursor.execute(
+        "DELETE FROM treinos WHERE user_id = %s",
+        (ctx.author.id,)
+    )
 
-        db.commit()
+    db.commit()
 
-        await ctx.send(
-            f"❌ {ctx.author.mention}, o tempo de **15 minutos** "
-            f"para enviar a ação acabou.\n"
-            f"O treino foi **cancelado**."
-        )
+    await ctx.send(
+        f"❌ {ctx.author.mention}, o tempo de **15 minutos** "
+        f"para enviar a ação acabou.\n"
+        f"O treino foi **cancelado**."
+    )
 
-        return
+    return
 
     quantidade_caracteres = len(mensagem.content)
 
     if quantidade_caracteres < caracteres:
 
         cursor.execute(
-            "DELETE FROM treinos WHERE user_id = ?",
+            "DELETE FROM treinos WHERE user_id = %s",
             (ctx.author.id,)
         )
 
