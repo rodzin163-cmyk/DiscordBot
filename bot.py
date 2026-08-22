@@ -1499,6 +1499,58 @@ async def level(ctx):
         f"{barra}"
     )
 
+# ============================================================
+# !PERFIL
+# ============================================================
+
+@bot.command()
+async def perfil(ctx):
+
+    nivel = obter_nivel(ctx.author.id)
+
+    xp = nivel[0]
+    level = nivel[1]
+
+    jogador = obter_jogador(ctx.author.id)
+
+    velocidade = jogador[2]
+    forca = jogador[3]
+    resistencia = jogador[4]
+    manejo = jogador[5]
+    regeneracao = jogador[6]
+    folego = jogador[7]
+    sangue = jogador[8]
+
+    embed = discord.Embed(
+        title=f"⚔️ Perfil de {ctx.author.display_name}",
+        color=discord.Color.blue()
+    )
+
+    embed.add_field(
+        name="⭐ Progressão",
+        value=(
+            f"Level: **{level}**\n"
+            f"XP: **{xp}**"
+        ),
+        inline=False
+    )
+
+    embed.add_field(
+        name="📊 Atributos",
+        value=(
+            f"⚡ Velocidade: **{velocidade}**\n"
+            f"💪 Força: **{forca}**\n"
+            f"🛡️ Resistência: **{resistencia}**\n"
+            f"⚔️ Manejo: **{manejo}**\n"
+            f"❤️ Regeneração: **{regeneracao}**\n"
+            f"🌊 Fôlego: **{folego}**\n"
+            f"🩸 Sangue: **{sangue}**"
+        ),
+        inline=False
+    )
+
+    await ctx.send(embed=embed)
+
 
 # ============================================================
 # TOKEN
