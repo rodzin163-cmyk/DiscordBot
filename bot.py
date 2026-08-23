@@ -289,6 +289,78 @@ def adicionar_pontos_status(user_id, quantidade):
     db.commit()
 
 # ============================================================
+# SISTEMA DE DINHEIRO
+# ============================================================
+
+def criar_dinheiro(user_id):
+
+    cursor.execute(
+        """
+        INSERT INTO dinheiro (user_id)
+        VALUES (%s)
+        ON CONFLICT (user_id) DO NOTHING
+        """,
+        (user_id,)
+    )
+
+    db.commit()
+
+
+
+def obter_dinheiro(user_id):
+
+    criar_dinheiro(user_id)
+
+    cursor.execute(
+        """
+        SELECT quantidade
+        FROM dinheiro
+        WHERE user_id = %s
+        """,
+        (user_id,)
+    )
+
+    return cursor.fetchone()[0]
+
+
+
+def adicionar_dinheiro(user_id, quantidade):
+
+    criar_dinheiro(user_id)
+
+    cursor.execute(
+        """
+        UPDATE dinheiro
+        SET quantidade = quantidade + %s
+        WHERE user_id = %s
+        """,
+        (
+            quantidade,
+            user_id
+        )
+    )
+
+    db.commit()
+
+
+
+def remover_dinheiro(user_id, quantidade):
+
+    cursor.execute(
+        """
+        UPDATE dinheiro
+        SET quantidade = quantidade - %s
+        WHERE user_id = %s
+        """,
+        (
+            quantidade,
+            user_id
+        )
+    )
+
+    db.commit()
+
+# ============================================================
 # CARGOS DE PERSONAGEM
 # ============================================================
 
@@ -1345,6 +1417,19 @@ async def help(ctx):
 
 
     embed.add_field(
+        name="💸 Economia",
+        value=(
+            "💰 `!saldo`\n"
+            "Mostra a quantidade de moedas que possuis.\n\n"
+
+            "🏪 `!loja`\n"
+            "Abre a loja do Last Soul e permite comprar itens."
+        ),
+        inline=False
+    )
+
+
+    embed.add_field(
         name="🎁 Mystery Box",
         value=(
             "🎁 `Botão no !perfil`\n"
@@ -1392,17 +1477,20 @@ async def help(ctx):
             "Adiciona pontos diretamente nos atributos de um jogador.\n\n"
 
             "`!addbox @jogador <quantidade>`\n"
-            "Adiciona Mystery Boxes a um jogador."
+            "Adiciona Mystery Boxes a um jogador.\n\n"
 
             "`!givexp @jogador <quantidade>`\n"
-            "Adiciona XP a um jogador."
+            "Adiciona XP a um jogador.\n\n"
+
+            "`!addmoney @jogador <quantidade>`\n"
+            "Adiciona moedas a um jogador."
         ),
         inline=False
     )
 
 
     embed.set_footer(
-        text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ • Sistema de Atributos, Treinos e Progressão"
+        text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ • Sistema de Atributos, Economia, Treinos e Progressão"
     )
 
 
@@ -2282,6 +2370,42 @@ async def givexp(ctx, membro: discord.Member, quantidade: int):
 
 
     await ctx.send(mensagem)
+
+# ============================================================
+# !SALDO
+# ============================================================
+
+@bot.command()
+async def saldo(ctx):
+
+    dinheiro = obter_dinheiro(ctx.author.id)
+
+    embed = discord.Embed(
+        title="💸 Carteira",
+        description=f"Possuis **{dinheiro} 💸**",
+        color=discord.Color.gold()
+    )
+
+    await ctx.send(embed=embed)
+
+# ============================================================
+# !ADDMONEY (STAFF)
+# ============================================================
+
+@bot.command()
+async def addmoney(ctx, membro: discord.Member, quantidade: int):
+
+    if not ctx.author.guild_permissions.administrator:
+        return await ctx.send("❌ Sem permissão.")
+
+    adicionar_dinheiro(
+        membro.id,
+        quantidade
+    )
+
+    await ctx.send(
+        f"💸 {membro.mention} recebeu **{quantidade} moedas**."
+    )
 
 # ============================================================
 # TOKEN
