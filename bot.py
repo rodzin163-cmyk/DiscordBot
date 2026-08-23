@@ -242,6 +242,62 @@ def obter_jogador(user_id):
 
     return cursor.fetchone()
 
+    # ============================================================
+# SISTEMA DE INVENTÁRIO
+# ============================================================
+
+def adicionar_item(user_id, item, quantidade=1):
+
+    cursor.execute(
+        """
+        INSERT INTO inventario (user_id, item, quantidade)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (user_id, item)
+        DO UPDATE SET quantidade = inventario.quantidade + %s
+        """,
+        (
+            user_id,
+            item,
+            quantidade,
+            quantidade
+        )
+    )
+
+    db.commit()
+
+
+def remover_item(user_id, item, quantidade=1):
+
+    cursor.execute(
+        """
+        UPDATE inventario
+        SET quantidade = quantidade - %s
+        WHERE user_id = %s
+        AND item = %s
+        """,
+        (
+            quantidade,
+            user_id,
+            item
+        )
+    )
+
+    db.commit()
+
+
+def obter_inventario(user_id):
+
+    cursor.execute(
+        """
+        SELECT item, quantidade
+        FROM inventario
+        WHERE user_id = %s
+        """,
+        (user_id,)
+    )
+
+    return cursor.fetchall()
+
 # ============================================================
 # SISTEMA DE MYSTERY BOX
 # ============================================================
@@ -1584,6 +1640,8 @@ async def perfil(ctx):
     xp = nivel[0]
     level = nivel[1]
 
+    mysteryboxes = obter_mysterybox(ctx.author.id)
+
     jogador = obter_jogador(ctx.author.id)
 
     velocidade = jogador[2]
@@ -1603,7 +1661,8 @@ async def perfil(ctx):
         name="⭐ Progressão",
         value=(
             f"Level: **{level}**\n"
-            f"XP: **{xp}**"
+            f"XP: **{xp}**\n"
+            f"🎁 Mystery Boxes: **{mysteryboxes}**"
         ),
         inline=False
     )
@@ -1625,18 +1684,48 @@ async def perfil(ctx):
     await ctx.send(embed=embed)
 
 # ============================================================
-# TESTE MYSTERY BOX
+# !INVENTARIO
 # ============================================================
 
 @bot.command()
-async def testebox(ctx):
+async def inventario(ctx):
 
-    adicionar_mysterybox(ctx.author.id, 1)
+    itens = obter_inventario(ctx.author.id)
 
-    await ctx.send(
-        f"🎁 {ctx.author.mention}, recebeste 1 Mystery Box de teste!"
+    embed = discord.Embed(
+        title=f"🎒 Inventário de {ctx.author.display_name}",
+        color=discord.Color.green()
     )
 
+    if not itens:
+
+        embed.description = "O teu inventário está vazio."
+
+    else:
+
+        lista_itens = ""
+
+        for item, quantidade in itens:
+            lista_itens += f"• {item} x{quantidade}\n"
+
+        embed.description = lista_itens
+
+
+    await ctx.send(embed=embed)
+
+# ============================================================
+# !ADDBOX (STAFF)
+# ============================================================
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def addbox(ctx, membro: discord.Member, quantidade: int):
+
+    adicionar_mysterybox(membro.id, quantidade)
+
+    await ctx.send(
+        f"🎁 {membro.mention} recebeu **{quantidade} Mystery Box(es)**!"
+    )
 
 # ============================================================
 # TOKEN
