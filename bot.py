@@ -1465,29 +1465,35 @@ async def help(ctx):
 
 
     embed.add_field(
-        name="📈 Level & Progressão",
+        name="📈 Progressão",
         value=(
             "⭐ `!level`\n"
             "Mostra o teu nível e XP.\n\n"
 
             "⚔️ `!perfil`\n"
-            "Mostra o teu perfil completo, atributos e Mystery Boxes.\n\n"
-
-            "🎒 `!inventario`\n"
-            "Mostra os teus itens guardados."
+            "Mostra o teu perfil completo, atributos e Mystery Boxes."
         ),
         inline=False
     )
 
 
     embed.add_field(
-        name="💸 Economia",
+        name="💸 Economia & Inventário",
         value=(
             "💰 `!saldo`\n"
-            "Mostra a quantidade de moedas que possuis.\n\n"
+            "Mostra as tuas moedas.\n\n"
 
             "🏪 `!loja`\n"
-            "Mostra os produtos disponíveis para comprar."
+            "Mostra os produtos disponíveis para compra.\n\n"
+
+            "🛒 `!comprar <item>`\n"
+            "Compra um item da loja.\n\n"
+
+            "🎒 `!inventario`\n"
+            "Mostra todos os teus itens.\n\n"
+
+            "✨ `!use <item>`\n"
+            "Usa um item que tenhas no inventário."
         ),
         inline=False
     )
@@ -1497,12 +1503,12 @@ async def help(ctx):
         name="🎁 Mystery Box",
         value=(
             "🎁 `Botão no !perfil`\n"
-            "Abre Mystery Boxes disponíveis e recebe recompensas.\n\n"
+            "Abre Mystery Boxes disponíveis.\n\n"
 
             "As recompensas podem ser:\n"
             "⭐ XP\n"
             "📊 Pontos de Status\n"
-            "🎭 Itens\n"
+            "🎭 Itens cosméticos\n"
             "👕 Roupas e acessórios"
         ),
         inline=False
@@ -1522,10 +1528,10 @@ async def help(ctx):
             "Inicia um treino extremo.\n\n"
 
             "`!finalizar`\n"
-            "Finaliza o treino depois do tempo necessário.\n\n"
+            "Finaliza o treino após o tempo necessário.\n\n"
 
             "`!cancelar`\n"
-            "Cancela o treino atual sem receber pontos."
+            "Cancela o treino atual."
         ),
         inline=False
     )
@@ -1535,32 +1541,32 @@ async def help(ctx):
         name="🛡️ Staff",
         value=(
             "`!givepoints @jogador <quantidade>`\n"
-            "Adiciona pontos disponíveis a um jogador.\n\n"
+            "Adiciona pontos disponíveis.\n\n"
 
             "`!addatributo @jogador <atributo> <quantidade>`\n"
-            "Adiciona pontos diretamente nos atributos de um jogador.\n\n"
+            "Adiciona pontos diretamente nos atributos.\n\n"
 
             "`!addbox @jogador <quantidade>`\n"
-            "Adiciona Mystery Boxes a um jogador.\n\n"
+            "Adiciona Mystery Boxes.\n\n"
 
             "`!givexp @jogador <quantidade>`\n"
-            "Adiciona XP a um jogador.\n\n"
+            "Adiciona XP.\n\n"
 
             "`!addmoney @jogador <quantidade>`\n"
-            "Adiciona moedas 💸 a um jogador.\n\n"
+            "Adiciona moedas 💸.\n\n"
 
             "`!addproduto`\n"
-            "Abre o formulário para adicionar um produto à loja.\n\n"
+            "Abre o formulário para adicionar produtos à loja.\n\n"
 
             "`!removerproduto`\n"
-            "Abre o formulário para remover um produto da loja."
+            "Abre o formulário para remover produtos da loja."
         ),
         inline=False
     )
 
 
     embed.set_footer(
-        text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ • Sistema de Atributos, Economia, Loja, Treinos e Progressão"
+        text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ • Sistema de RP, Economia, Inventário e Progressão"
     )
 
 
