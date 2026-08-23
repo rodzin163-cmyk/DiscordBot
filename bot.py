@@ -2838,6 +2838,71 @@ async def comprar(ctx, *, nome):
     )
 
 # ============================================================
+# !USE
+# ============================================================
+
+@bot.command()
+async def use(ctx, *, item):
+
+    inventario = obter_inventario(
+        ctx.author.id
+    )
+
+
+    item_encontrado = None
+    quantidade = 0
+
+
+    for nome, qtd in inventario:
+
+        if nome.lower() == item.lower():
+
+            item_encontrado = nome
+            quantidade = qtd
+            break
+
+
+
+    if item_encontrado is None:
+
+        return await ctx.send(
+            "❌ Não possuis esse item no inventário."
+        )
+
+
+
+    if quantidade <= 0:
+
+        return await ctx.send(
+            "❌ Não tens nenhuma unidade desse item."
+        )
+
+
+
+    # Remove 1 unidade do inventário
+
+    remover_item(
+        ctx.author.id,
+        item_encontrado,
+        1
+    )
+
+
+    embed = discord.Embed(
+        title="✨ Item usado",
+        description=(
+            f"📦 Usaste **{item_encontrado}**.\n\n"
+            "O efeito deste item será definido futuramente."
+        ),
+        color=discord.Color.green()
+    )
+
+
+    await ctx.send(
+        embed=embed
+    )
+
+# ============================================================
 # TOKEN
 # ============================================================
 
