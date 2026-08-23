@@ -19,25 +19,25 @@ RECOMPENSAS_MYSTERYBOX = [
     # ========================================================
 
     {
-        "nome": "+50 XP de Level",
+        "nome": "+250 XP de Level",
         "tipo": "xp",
-        "valor": 50,
+        "valor": 250,
         "raridade": "comum",
         "restricao": "todos"
     },
 
     {
-        "nome": "+100 XP de Level",
+        "nome": "+500 XP de Level",
         "tipo": "xp",
-        "valor": 100,
+        "valor": 500,
         "raridade": "raro",
         "restricao": "todos"
     },
 
     {
-        "nome": "+250 XP de Level",
+        "nome": "+1000 XP de Level",
         "tipo": "xp",
-        "valor": 250,
+        "valor": 1000,
         "raridade": "lendario",
         "restricao": "todos"
     },
