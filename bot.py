@@ -2305,21 +2305,29 @@ async def finalizar(ctx):
 # ============================================================
 
 @bot.command()
-async def level(ctx):
+async def level(ctx, membro: discord.Member = None):
 
-    jogador = obter_nivel(ctx.author.id)
+    if membro is None:
+        membro = ctx.author
+
+
+    jogador = obter_nivel(membro.id)
 
     xp = jogador[0]
     nivel = jogador[1]
 
+
     xp_necessario = xp_para_proximo_level(nivel)
+
 
     progresso = int((xp / xp_necessario) * 10)
 
+
     barra = "█" * progresso + "░" * (10 - progresso)
 
+
     await ctx.send(
-        f"⚔️ **{ctx.author.display_name}**\n\n"
+        f"⚔️ **{membro.display_name}**\n\n"
         f"⭐ Level: **{nivel}**\n"
         f"✨ XP: **{xp}/{xp_necessario}**\n\n"
         f"{barra}"
