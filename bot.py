@@ -1309,6 +1309,7 @@ async def help(ctx):
         color=discord.Color.dark_red()
     )
 
+
     embed.add_field(
         name="📊 Atributos",
         value=(
@@ -1319,20 +1320,43 @@ async def help(ctx):
             "Mostra os atributos de outro jogador.\n\n"
 
             "`!add <quantidade> <atributo>`\n"
-            "Distribui pontos do inventário."
+            "Distribui pontos disponíveis nos atributos."
         ),
         inline=False
     )
 
+
     embed.add_field(
-    name="📈 Progressão",
-    value=(
-        "⭐ `!level` - Ver o teu nível e XP\n"
-        "🎒 `!inventario` - Ver os teus itens\n"
-        "🎁 `!mysterybox` - Sistema de Mystery Boxes"
-    ),
-    inline=False
-)
+        name="📈 Level & Progressão",
+        value=(
+            "⭐ `!level`\n"
+            "Mostra o teu nível e XP.\n\n"
+
+            "⚔️ `!perfil`\n"
+            "Mostra o teu perfil completo, atributos e Mystery Boxes.\n\n"
+
+            "🎒 `!inventario`\n"
+            "Mostra os teus itens guardados."
+        ),
+        inline=False
+    )
+
+
+    embed.add_field(
+        name="🎁 Mystery Box",
+        value=(
+            "🎁 `Botão no !perfil`\n"
+            "Abre Mystery Boxes disponíveis e recebe recompensas.\n\n"
+
+            "As recompensas podem ser:\n"
+            "⭐ XP\n"
+            "📊 Pontos de Status\n"
+            "🎭 Itens cosméticos\n"
+            "👕 Roupas e acessórios"
+        ),
+        inline=False
+    )
+
 
     embed.add_field(
         name="🏋️ Treinos",
@@ -1351,26 +1375,31 @@ async def help(ctx):
 
             "`!cancelar`\n"
             "Cancela o treino atual sem receber pontos."
-
         ),
         inline=False
     )
 
+
     embed.add_field(
         name="🛡️ Staff",
-value=(
-    "`!givepoints @jogador <quantidade>`\n"
-    "Adiciona pontos ao inventário de um jogador.\n\n"
+        value=(
+            "`!givepoints @jogador <quantidade>`\n"
+            "Adiciona pontos disponíveis a um jogador.\n\n"
 
-    "`!addatributo @jogador <atributo> <quantidade>`\n"
-    "Adiciona pontos diretamente nos atributos de um jogador (Staff)."
-),
-inline=False
-)
+            "`!addatributo @jogador <atributo> <quantidade>`\n"
+            "Adiciona pontos diretamente nos atributos de um jogador.\n\n"
+
+            "`!addbox @jogador <quantidade>`\n"
+            "Adiciona Mystery Boxes a um jogador."
+        ),
+        inline=False
+    )
+
 
     embed.set_footer(
-        text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ • Sistema de Atributos e Treinos"
+        text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ • Sistema de Atributos, Treinos e Progressão"
     )
+
 
     await ctx.send(embed=embed)
 
