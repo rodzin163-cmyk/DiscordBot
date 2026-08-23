@@ -6,6 +6,254 @@ import math
 import os
 from datetime import datetime, timezone, timedelta
 
+# ============================================================
+# RECOMPENSAS MYSTERY BOX
+# ============================================================
+
+RECOMPENSAS_MYSTERYBOX = [
+
+    # ========================================================
+    # XP
+    # ========================================================
+
+    {
+        "nome": "+50 XP de Level",
+        "tipo": "xp",
+        "valor": 50,
+        "raridade": "comum",
+        "restricao": "todos"
+    },
+
+    {
+        "nome": "+100 XP de Level",
+        "tipo": "xp",
+        "valor": 100,
+        "raridade": "raro",
+        "restricao": "todos"
+    },
+
+    {
+        "nome": "+250 XP de Level",
+        "tipo": "xp",
+        "valor": 250,
+        "raridade": "lendario",
+        "restricao": "todos"
+    },
+
+
+    # ========================================================
+    # PONTOS DE STATUS
+    # ========================================================
+
+    {
+        "nome": "+5 Pontos de Status",
+        "tipo": "status",
+        "valor": 5,
+        "raridade": "comum",
+        "restricao": "todos"
+    },
+
+    {
+        "nome": "+10 Pontos de Status",
+        "tipo": "status",
+        "valor": 10,
+        "raridade": "comum",
+        "restricao": "todos"
+    },
+
+    {
+        "nome": "+20 Pontos de Status",
+        "tipo": "status",
+        "valor": 20,
+        "raridade": "raro",
+        "restricao": "todos"
+    },
+
+    {
+        "nome": "+30 Pontos de Status",
+        "tipo": "status",
+        "valor": 30,
+        "raridade": "raro",
+        "restricao": "todos"
+    },
+
+    {
+        "nome": "+50 Pontos de Status",
+        "tipo": "status",
+        "valor": 50,
+        "raridade": "epico",
+        "restricao": "todos"
+    },
+
+    {
+        "nome": "+70 Pontos de Status",
+        "tipo": "status",
+        "valor": 70,
+        "raridade": "lendario",
+        "restricao": "todos"
+    },
+
+    {
+        "nome": "+100 Pontos de Status",
+        "tipo": "status",
+        "valor": 100,
+        "raridade": "mitico",
+        "restricao": "todos"
+    },
+
+
+    # ========================================================
+    # ITENS UNIVERSAIS
+    # ========================================================
+
+    {
+        "nome": "Máscara de Sabito",
+        "tipo": "item",
+        "valor": "Máscara de Sabito",
+        "raridade": "raro",
+        "restricao": "todos"
+    },
+
+    {
+        "nome": "Máscara de Makomo",
+        "tipo": "item",
+        "valor": "Máscara de Makomo",
+        "raridade": "raro",
+        "restricao": "todos"
+    },
+
+    {
+        "nome": "Máscara de Urokodaki",
+        "tipo": "item",
+        "valor": "Máscara de Urokodaki",
+        "raridade": "raro",
+        "restricao": "todos"
+    },
+
+    {
+        "nome": "Máscara de Javali",
+        "tipo": "item",
+        "valor": "Máscara de Javali",
+        "raridade": "comum",
+        "restricao": "todos"
+    },
+
+    {
+        "nome": "Máscara Oni Simples",
+        "tipo": "item",
+        "valor": "Máscara Oni Simples",
+        "raridade": "comum",
+        "restricao": "todos"
+    },
+
+    {
+        "nome": "Máscara Oni Demoníaca",
+        "tipo": "item",
+        "valor": "Máscara Oni Demoníaca",
+        "raridade": "raro",
+        "restricao": "todos"
+    },
+
+    {
+        "nome": "Ratos musculosos do Uzui",
+        "tipo": "item",
+        "valor": "Ratos musculosos do Uzui",
+        "raridade": "raro",
+        "restricao": "todos"
+    },
+
+    {
+        "nome": "Chuntaro",
+        "tipo": "item",
+        "valor": "Chuntaro",
+        "raridade": "raro",
+        "restricao": "todos"
+    },
+
+
+    # ========================================================
+    # HUMANOS / CAÇADORES
+    # ========================================================
+
+    {
+        "nome": "Tsuba do Giyu Tomioka",
+        "tipo": "item",
+        "valor": "Tsuba do Giyu Tomioka",
+        "raridade": "raro",
+        "restricao": "humano"
+    },
+
+    {
+        "nome": "Tsuba do Kyojuro Rengoku",
+        "tipo": "item",
+        "valor": "Tsuba do Kyojuro Rengoku",
+        "raridade": "epico",
+        "restricao": "humano"
+    },
+
+    {
+        "nome": "Tsuba do Tengen Uzui",
+        "tipo": "item",
+        "valor": "Tsuba do Tengen Uzui",
+        "raridade": "raro",
+        "restricao": "humano"
+    },
+
+
+    {
+        "nome": "Haori do Kyojuro Rengoku",
+        "tipo": "item",
+        "valor": "Haori do Kyojuro Rengoku",
+        "raridade": "epico",
+        "restricao": "humano"
+    },
+
+    {
+        "nome": "Haori do Giyu Tomioka",
+        "tipo": "item",
+        "valor": "Haori do Giyu Tomioka",
+        "raridade": "epico",
+        "restricao": "humano"
+    },
+
+
+    # ========================================================
+    # ONIS
+    # ========================================================
+
+    {
+        "nome": "Roupa do Akaza",
+        "tipo": "item",
+        "valor": "Roupa do Akaza",
+        "raridade": "epico",
+        "restricao": "oni"
+    },
+
+    {
+        "nome": "Roupa do Douma",
+        "tipo": "item",
+        "valor": "Roupa do Douma",
+        "raridade": "epico",
+        "restricao": "oni"
+    },
+
+    {
+        "nome": "Roupa do Kokushibo",
+        "tipo": "item",
+        "valor": "Roupa do Kokushibo",
+        "raridade": "epico",
+        "restricao": "oni"
+    },
+
+    {
+        "nome": "Roupa do Muzan",
+        "tipo": "item",
+        "valor": "Roupa do Muzan",
+        "raridade": "lendario",
+        "restricao": "oni"
+    }
+
+]
 
 # ============================================================
 # CARGOS DE PERSONAGEM
