@@ -2753,6 +2753,91 @@ async def loja(ctx):
     )
 
 # ============================================================
+# !COMPRAR
+# ============================================================
+
+@bot.command()
+async def comprar(ctx, *, nome):
+
+    cursor.execute(
+        """
+        SELECT nome, preco, descricao
+        FROM loja
+        WHERE LOWER(nome) = LOWER(%s)
+        """,
+        (nome,)
+    )
+
+    produto = cursor.fetchone()
+
+
+    if produto is None:
+
+        return await ctx.send(
+            "❌ Esse item não existe na loja."
+        )
+
+
+    nome_item = produto[0]
+    preco = produto[1]
+    descricao = produto[2]
+
+
+    dinheiro = obter_dinheiro(
+        ctx.author.id
+    )
+
+
+    if dinheiro < preco:
+
+        return await ctx.send(
+            f"❌ Não tens dinheiro suficiente.\n"
+            f"💸 Precisas de **{preco} moedas**."
+        )
+
+
+    remover_dinheiro(
+        ctx.author.id,
+        preco
+    )
+
+
+    adicionar_item(
+        ctx.author.id,
+        nome_item
+    )
+
+
+    embed = discord.Embed(
+        title="🛒 Compra realizada!",
+        color=discord.Color.green()
+    )
+
+
+    embed.add_field(
+        name="📦 Item",
+        value=nome_item,
+        inline=False
+    )
+
+    embed.add_field(
+        name="💸 Valor pago",
+        value=f"{preco} moedas",
+        inline=False
+    )
+
+    embed.add_field(
+        name="📝 Descrição",
+        value=descricao,
+        inline=False
+    )
+
+
+    await ctx.send(
+        embed=embed
+    )
+
+# ============================================================
 # TOKEN
 # ============================================================
 
