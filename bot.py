@@ -1487,7 +1487,7 @@ async def help(ctx):
             "Mostra a quantidade de moedas que possuis.\n\n"
 
             "🏪 `!loja`\n"
-            "Abre a loja do Last Soul e permite comprar itens."
+            "Mostra os produtos disponíveis para comprar."
         ),
         inline=False
     )
@@ -1502,7 +1502,7 @@ async def help(ctx):
             "As recompensas podem ser:\n"
             "⭐ XP\n"
             "📊 Pontos de Status\n"
-            "🎭 Itens cosméticos\n"
+            "🎭 Itens\n"
             "👕 Roupas e acessórios"
         ),
         inline=False
@@ -1547,19 +1547,24 @@ async def help(ctx):
             "Adiciona XP a um jogador.\n\n"
 
             "`!addmoney @jogador <quantidade>`\n"
-            "Adiciona moedas a um jogador."
+            "Adiciona moedas 💸 a um jogador.\n\n"
+
+            "`!addproduto`\n"
+            "Abre o formulário para adicionar um produto à loja.\n\n"
+
+            "`!removerproduto`\n"
+            "Abre o formulário para remover um produto da loja."
         ),
         inline=False
     )
 
 
     embed.set_footer(
-        text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ • Sistema de Atributos, Economia, Treinos e Progressão"
+        text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ • Sistema de Atributos, Economia, Loja, Treinos e Progressão"
     )
 
 
     await ctx.send(embed=embed)
-
 
 # ============================================================
 # !ATRIBUTOS
