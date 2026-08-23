@@ -2695,6 +2695,64 @@ async def removerproduto(ctx):
     )
 
 # ============================================================
+# !LOJA
+# ============================================================
+
+@bot.command()
+async def loja(ctx):
+
+    produtos = obter_produtos()
+
+    if not produtos:
+
+        return await ctx.send(
+            "🏪 A loja está vazia neste momento."
+        )
+
+
+    dinheiro = obter_dinheiro(
+        ctx.author.id
+    )
+
+
+    embed = discord.Embed(
+        title="🏪 Loja — Last Soul",
+        description=(
+            f"💸 O teu saldo: **{dinheiro} moedas**\n\n"
+            "Produtos disponíveis:"
+        ),
+        color=discord.Color.gold()
+    )
+
+
+    for produto in produtos:
+
+        id_produto = produto[0]
+        nome = produto[1]
+        preco = produto[2]
+        descricao = produto[3]
+
+
+        embed.add_field(
+            name=f"📦 {id_produto} | {nome}",
+            value=(
+                f"💸 Preço: **{preco} moedas**\n"
+                f"📝 {descricao}"
+            ),
+            inline=False
+        )
+
+
+    embed.set_footer(
+        text="Usa !comprar <ID> para comprar um produto."
+    )
+
+
+    await ctx.send(
+        embed=embed
+    )
+
+# ============================================================
 # TOKEN
 # ============================================================
 
