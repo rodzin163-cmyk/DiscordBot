@@ -3034,9 +3034,12 @@ async def setlevel(ctx, membro: discord.Member, nivel: int):
         )
 
 
+    criar_nivel(membro.id)
+
+
     cursor.execute(
         """
-        UPDATE jogadores
+        UPDATE niveis
         SET level = %s
         WHERE user_id = %s
         """,
@@ -3053,7 +3056,6 @@ async def setlevel(ctx, membro: discord.Member, nivel: int):
     await ctx.send(
         f"⭐ O nível de {membro.mention} foi alterado para **Level {nivel}**."
     )
-
 # ============================================================
 # TOKEN
 # ============================================================
