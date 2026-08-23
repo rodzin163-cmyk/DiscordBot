@@ -2683,6 +2683,40 @@ class RemoverProdutoModal(Modal):
 
 
 # ============================================================
+# BOTÃO PARA REMOVER PRODUTO
+# ============================================================
+
+class RemoverProdutoButton(discord.ui.View):
+
+    def __init__(self):
+        super().__init__(timeout=60)
+
+
+    @discord.ui.button(
+        label="🗑️ Remover Produto",
+        style=discord.ButtonStyle.red
+    )
+    async def remover(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+
+        if not interaction.user.guild_permissions.administrator:
+
+            return await interaction.response.send_message(
+                "❌ Sem permissão.",
+                ephemeral=True
+            )
+
+
+        await interaction.response.send_modal(
+            RemoverProdutoModal()
+        )
+
+
+
+# ============================================================
 # !REMOVERPRODUTO (STAFF)
 # ============================================================
 
@@ -2692,12 +2726,23 @@ async def removerproduto(ctx):
     if not ctx.author.guild_permissions.administrator:
 
         return await ctx.send(
-            "❌ Não tens permissão para usar este comando."
+            "❌ Não tens permissão."
         )
 
 
-    await ctx.send_modal(
-        RemoverProdutoModal()
+    embed = discord.Embed(
+        title="🗑️ Remover Produto",
+        description=(
+            "Clica no botão abaixo para abrir "
+            "o formulário de remoção."
+        ),
+        color=discord.Color.red()
+    )
+
+
+    await ctx.send(
+        embed=embed,
+        view=RemoverProdutoButton()
     )
 
 # ============================================================
