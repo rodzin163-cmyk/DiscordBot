@@ -4,6 +4,7 @@ import psycopg2
 import asyncio
 import math
 import os
+import random
 from datetime import datetime, timezone, timedelta
 
 # ============================================================
@@ -256,6 +257,38 @@ RECOMPENSAS_MYSTERYBOX = [
 ]
 
 # ============================================================
+# PROBABILIDADES MYSTERY BOX
+# ============================================================
+
+RARIDADES_MYSTERYBOX = {
+    "comum": 60,
+    "raro": 25,
+    "epico": 10,
+    "lendario": 4,
+    "mitico": 1
+}
+
+# ============================================================
+# ADICIONAR PONTOS DE STATUS
+# ============================================================
+
+def adicionar_pontos_status(user_id, quantidade):
+
+    cursor.execute(
+        """
+        UPDATE jogadores
+        SET pontos = pontos + %s
+        WHERE user_id = %s
+        """,
+        (
+            quantidade,
+            user_id
+        )
+    )
+
+    db.commit()
+
+# ============================================================
 # CARGOS DE PERSONAGEM
 # ============================================================
 
@@ -490,7 +523,27 @@ def obter_jogador(user_id):
 
     return cursor.fetchone()
 
-    # ============================================================
+# ============================================================
+# ADICIONAR PONTOS DE STATUS
+# ============================================================
+
+def adicionar_pontos_status(user_id, quantidade):
+
+    cursor.execute(
+        """
+        UPDATE jogadores
+        SET pontos = pontos + %s
+        WHERE user_id = %s
+        """,
+        (
+            quantidade,
+            user_id
+        )
+    )
+
+    db.commit()
+
+# ============================================================
 # SISTEMA DE INVENTÁRIO
 # ============================================================
 
@@ -498,8 +551,13 @@ def adicionar_item(user_id, item, quantidade=1):
 
     cursor.execute(
         """
-        INSERT INTO inventario (user_id, item, quantidade)
+        INSERT INTO inventario (
+            user_id,
+            item,
+            quantidade
+        )
         VALUES (%s, %s, %s)
+
         ON CONFLICT (user_id, item)
         DO UPDATE SET quantidade = inventario.quantidade + %s
         """,
@@ -514,23 +572,67 @@ def adicionar_item(user_id, item, quantidade=1):
     db.commit()
 
 
+
 def remover_item(user_id, item, quantidade=1):
 
     cursor.execute(
         """
-        UPDATE inventario
-        SET quantidade = quantidade - %s
+        SELECT quantidade
+        FROM inventario
         WHERE user_id = %s
         AND item = %s
         """,
         (
-            quantidade,
             user_id,
             item
         )
     )
 
+    resultado = cursor.fetchone()
+
+
+    if resultado is None:
+        return False
+
+
+    quantidade_atual = resultado[0]
+
+
+    if quantidade_atual <= quantidade:
+
+        cursor.execute(
+            """
+            DELETE FROM inventario
+            WHERE user_id = %s
+            AND item = %s
+            """,
+            (
+                user_id,
+                item
+            )
+        )
+
+    else:
+
+        cursor.execute(
+            """
+            UPDATE inventario
+            SET quantidade = quantidade - %s
+            WHERE user_id = %s
+            AND item = %s
+            """,
+            (
+                quantidade,
+                user_id,
+                item
+            )
+        )
+
+
     db.commit()
+
+    return True
+
 
 
 def obter_inventario(user_id):
@@ -540,11 +642,87 @@ def obter_inventario(user_id):
         SELECT item, quantidade
         FROM inventario
         WHERE user_id = %s
+        ORDER BY item ASC
         """,
         (user_id,)
     )
 
     return cursor.fetchall()
+
+
+
+def tem_item(user_id, item):
+
+    cursor.execute(
+        """
+        SELECT quantidade
+        FROM inventario
+        WHERE user_id = %s
+        AND item = %s
+        """,
+        (
+            user_id,
+            item
+        )
+    )
+
+    resultado = cursor.fetchone()
+
+
+    if resultado:
+
+        return resultado[0] > 0
+
+
+    return False
+
+# ============================================================
+# BOTÃO MYSTERY BOX
+# ============================================================
+
+class MysteryBoxView(discord.ui.View):
+
+    def __init__(self):
+        super().__init__(timeout=None)
+
+
+    @discord.ui.button(
+        label="🎁 Abrir Mystery Box",
+        style=discord.ButtonStyle.blurple
+    )
+    async def abrir_box(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+
+        recompensa = abrir_mysterybox(
+            interaction.user.id
+        )
+
+
+        if recompensa is None:
+
+            await interaction.response.send_message(
+                "❌ Não tens Mystery Boxes disponíveis.",
+                ephemeral=True
+            )
+
+            return
+
+
+        dar_recompensa_mysterybox(
+            interaction.user.id,
+            recompensa
+        )
+
+
+        await interaction.response.send_message(
+            f"🎁 Abriste uma Mystery Box!\n\n"
+            f"🏆 Recompensa: **{recompensa['nome']}**\n"
+            f"⭐ Raridade: **{recompensa['raridade'].capitalize()}**",
+            ephemeral=True
+        )
 
 # ============================================================
 # SISTEMA DE MYSTERY BOX
@@ -614,6 +792,58 @@ def remover_mysterybox(user_id, quantidade=1):
     )
 
     db.commit()
+
+# ============================================================
+# ABRIR MYSTERY BOX
+# ============================================================
+
+def abrir_mysterybox(user_id):
+
+    quantidade = obter_mysterybox(user_id)
+
+    if quantidade <= 0:
+        return None
+
+
+    remover_mysterybox(user_id, 1)
+
+
+    recompensa = random.choice(RECOMPENSAS_MYSTERYBOX)
+
+
+    return recompensa
+
+# ============================================================
+# DAR RECOMPENSA DA MYSTERY BOX
+# ============================================================
+
+def dar_recompensa_mysterybox(user_id, recompensa):
+
+    tipo = recompensa["tipo"]
+
+    if tipo == "xp":
+
+        adicionar_xp(
+            user_id,
+            recompensa["valor"]
+        )
+
+
+    elif tipo == "status":
+
+        adicionar_pontos_status(
+            user_id,
+            recompensa["valor"]
+        )
+
+
+    elif tipo == "item":
+
+        # FUTURO: adicionar ao inventário
+        pass
+
+
+    return recompensa
 
 # ============================================================
 # SISTEMA DE NÍVEIS
@@ -1900,10 +2130,12 @@ async def perfil(ctx):
     folego = jogador[7]
     sangue = jogador[8]
 
+
     embed = discord.Embed(
         title=f"⚔️ Perfil de {ctx.author.display_name}",
         color=discord.Color.blue()
     )
+
 
     embed.add_field(
         name="⭐ Progressão",
@@ -1914,6 +2146,7 @@ async def perfil(ctx):
         ),
         inline=False
     )
+
 
     embed.add_field(
         name="📊 Atributos",
@@ -1929,7 +2162,11 @@ async def perfil(ctx):
         inline=False
     )
 
-    await ctx.send(embed=embed)
+
+    await ctx.send(
+        embed=embed,
+        view=MysteryBoxView()
+    )
 
 # ============================================================
 # !INVENTARIO
