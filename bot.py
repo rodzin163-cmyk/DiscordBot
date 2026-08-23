@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord.ui import Modal, TextInput
 import psycopg2
 import asyncio
 import math
@@ -359,6 +360,69 @@ def remover_dinheiro(user_id, quantidade):
     )
 
     db.commit()
+
+# ============================================================
+# SISTEMA DE LOJA
+# ============================================================
+
+
+def adicionar_produto(nome, preco, descricao):
+
+    cursor.execute(
+        """
+        INSERT INTO loja (nome, preco, descricao)
+        VALUES (%s, %s, %s)
+        """,
+        (
+            nome,
+            preco,
+            descricao
+        )
+    )
+
+    db.commit()
+
+
+
+def remover_produto(nome):
+
+    cursor.execute(
+        """
+        DELETE FROM loja
+        WHERE nome = %s
+        """,
+        (nome,)
+    )
+
+    db.commit()
+
+
+
+def obter_produtos():
+
+    cursor.execute(
+        """
+        SELECT id, nome, preco, descricao
+        FROM loja
+        """
+    )
+
+    return cursor.fetchall()
+
+
+
+def obter_produto(id):
+
+    cursor.execute(
+        """
+        SELECT id, nome, preco, descricao
+        FROM loja
+        WHERE id = %s
+        """,
+        (id,)
+    )
+
+    return cursor.fetchone()
 
 # ============================================================
 # CARGOS DE PERSONAGEM
@@ -2405,6 +2469,180 @@ async def addmoney(ctx, membro: discord.Member, quantidade: int):
 
     await ctx.send(
         f"💸 {membro.mention} recebeu **{quantidade} moedas**."
+    )
+
+# ============================================================
+# FORMULÁRIO ADICIONAR PRODUTO
+# ============================================================
+
+class AdicionarProdutoModal(Modal):
+
+    def __init__(self):
+        super().__init__(
+            title="🏪 Adicionar Produto"
+        )
+
+        self.nome = TextInput(
+            label="📦 Nome do Item",
+            placeholder="Ex: Pequena Casa",
+            required=True,
+            max_length=100
+        )
+
+        self.preco = TextInput(
+            label="💸 Preço",
+            placeholder="Ex: 5000",
+            required=True,
+            max_length=10
+        )
+
+        self.descricao = TextInput(
+            label="📝 Descrição",
+            placeholder="Ex: Uma pequena casa para o personagem.",
+            required=True,
+            style=discord.TextStyle.paragraph,
+            max_length=300
+        )
+
+
+        self.add_item(self.nome)
+        self.add_item(self.preco)
+        self.add_item(self.descricao)
+
+
+
+    async def on_submit(self, interaction: discord.Interaction):
+
+        try:
+            preco = int(self.preco.value)
+
+        except:
+
+            return await interaction.response.send_message(
+                "❌ O preço precisa ser um número.",
+                ephemeral=True
+            )
+
+
+        adicionar_produto(
+            self.nome.value,
+            preco,
+            self.descricao.value
+        )
+
+
+        embed = discord.Embed(
+            title="✅ Produto Adicionado à Loja",
+            color=discord.Color.green()
+        )
+
+
+        embed.add_field(
+            name="📦 Item",
+            value=self.nome.value,
+            inline=False
+        )
+
+
+        embed.add_field(
+            name="💸 Preço",
+            value=f"{preco} 💸",
+            inline=False
+        )
+
+
+        embed.add_field(
+            name="📝 Descrição",
+            value=self.descricao.value,
+            inline=False
+        )
+
+
+        await interaction.response.send_message(
+            embed=embed
+        )
+
+
+
+# ============================================================
+# !ADDPRODUTO (STAFF)
+# ============================================================
+
+@bot.command()
+async def addproduto(ctx):
+
+    if not ctx.author.guild_permissions.administrator:
+
+        return await ctx.send(
+            "❌ Não tens permissão para usar este comando."
+        )
+
+
+    await ctx.send_modal(
+        AdicionarProdutoModal()
+    )
+
+
+# ============================================================
+# FORMULÁRIO REMOVER PRODUTO
+# ============================================================
+
+class RemoverProdutoModal(Modal):
+
+    def __init__(self):
+        super().__init__(
+            title="🗑️ Remover Produto"
+        )
+
+
+        self.nome = TextInput(
+            label="📦 Nome do Item",
+            placeholder="Ex: Pequena Casa",
+            required=True,
+            max_length=100
+        )
+
+
+        self.add_item(self.nome)
+
+
+
+    async def on_submit(self, interaction: discord.Interaction):
+
+        remover_produto(
+            self.nome.value
+        )
+
+
+        embed = discord.Embed(
+            title="🗑️ Produto Removido",
+            description=f"O item **{self.nome.value}** foi removido da loja.",
+            color=discord.Color.red()
+        )
+
+
+        await interaction.response.send_message(
+            embed=embed
+        )
+
+
+
+# ============================================================
+# !REMOVERPRODUTO (STAFF)
+# ============================================================
+
+@bot.command()
+async def removerproduto(ctx):
+
+    if not ctx.author.guild_permissions.administrator:
+
+        return await ctx.send(
+            "❌ Não tens permissão para usar este comando."
+        )
+
+
+    await ctx.send_modal(
+        RemoverProdutoModal()
     )
 
 # ============================================================
