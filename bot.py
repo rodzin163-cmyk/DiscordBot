@@ -438,9 +438,30 @@ CARGO_HIBRIDO = 1386546789829709824
 # ============================================================
 
 CARGO_MODERADOR = 1388566955069280287
+CARGO_SUPERVISAO = 1388567043628077197
 CARGO_ADM = 1388566858390573246
 CARGO_FUNDADOR = 1386441239125295237
 
+
+
+# ============================================================
+# VERIFICAÇÃO DE STAFF
+# ============================================================
+
+def is_staff(member):
+
+    cargos_staff = [
+        CARGO_MODERADOR,
+        CARGO_SUPERVISAO,
+        CARGO_ADM,
+        CARGO_FUNDADOR
+    ]
+
+
+    return any(
+        cargo.id in cargos_staff
+        for cargo in member.roles
+    )
 
 # ============================================================
 # CARGOS DE TREINO
@@ -1304,20 +1325,15 @@ async def verificar_treinos():
 @bot.command()
 async def addatributo(ctx, membro: discord.Member = None, atributo: str = None, quantidade: int = None):
 
-    cargos_staff = [
-        1388566955069280287,  # Moderador
-        1388566858390573246,  # ADM
-        1386441239125295237   # Fundador
-    ]
 
-
-    if not any(cargo.id in cargos_staff for cargo in ctx.author.roles):
+    if not is_staff(ctx.author):
 
         await ctx.send(
             "❌ Não tens permissão para usar este comando."
         )
 
         return
+
 
 
     if membro is None or atributo is None or quantidade is None:
@@ -1330,6 +1346,7 @@ async def addatributo(ctx, membro: discord.Member = None, atributo: str = None, 
         )
 
         return
+
 
 
     atributos_validos = [
@@ -1355,6 +1372,7 @@ async def addatributo(ctx, membro: discord.Member = None, atributo: str = None, 
         return
 
 
+
     cursor.execute(
         "SELECT * FROM jogadores WHERE user_id = %s",
         (membro.id,)
@@ -1372,6 +1390,7 @@ async def addatributo(ctx, membro: discord.Member = None, atributo: str = None, 
         return
 
 
+
     limite = 1000
 
 
@@ -1382,6 +1401,7 @@ async def addatributo(ctx, membro: discord.Member = None, atributo: str = None, 
     if tipo in ["oni", "hibrido"]:
 
         limite = 1150
+
 
 
     colunas = {
@@ -1395,6 +1415,7 @@ async def addatributo(ctx, membro: discord.Member = None, atributo: str = None, 
     }
 
 
+
     valor_atual = jogador[colunas[atributo]]
 
 
@@ -1406,7 +1427,9 @@ async def addatributo(ctx, membro: discord.Member = None, atributo: str = None, 
         novo_valor = limite
 
 
+
     ganho = novo_valor - valor_atual
+
 
 
     cursor.execute(
@@ -1425,6 +1448,7 @@ async def addatributo(ctx, membro: discord.Member = None, atributo: str = None, 
     db.commit()
 
 
+
     await ctx.send(
         f"✅ **Atributo atualizado!**\n\n"
         f"👤 Jogador: {membro.mention}\n"
@@ -1432,7 +1456,6 @@ async def addatributo(ctx, membro: discord.Member = None, atributo: str = None, 
         f"➕ Adicionado: **+{ganho} pontos**\n"
         f"📈 Atual: **{novo_valor}/{limite}**"
     )
-
 
 # ============================================================
 # !HELP
@@ -1481,19 +1504,19 @@ async def help(ctx):
         name="💸 Economia & Inventário",
         value=(
             "💰 `!saldo`\n"
-            "Mostra as tuas moedas.\n\n"
+            "Mostra a quantidade de moedas que possuis.\n\n"
 
             "🏪 `!loja`\n"
             "Mostra os produtos disponíveis para compra.\n\n"
 
             "🛒 `!comprar <item>`\n"
-            "Compra um item da loja.\n\n"
+            "Compra um produto da loja.\n\n"
 
             "🎒 `!inventario`\n"
-            "Mostra todos os teus itens.\n\n"
+            "Mostra todos os itens guardados.\n\n"
 
             "✨ `!use <item>`\n"
-            "Usa um item que tenhas no inventário."
+            "Utiliza um item do inventário."
         ),
         inline=False
     )
@@ -1505,7 +1528,7 @@ async def help(ctx):
             "🎁 `Botão no !perfil`\n"
             "Abre Mystery Boxes disponíveis.\n\n"
 
-            "As recompensas podem ser:\n"
+            "Possíveis recompensas:\n"
             "⭐ XP\n"
             "📊 Pontos de Status\n"
             "🎭 Itens cosméticos\n"
@@ -1550,7 +1573,10 @@ async def help(ctx):
             "Adiciona Mystery Boxes.\n\n"
 
             "`!givexp @jogador <quantidade>`\n"
-            "Adiciona XP.\n\n"
+            "Adiciona XP a um jogador.\n\n"
+
+            "`!setlevel @jogador <nível>`\n"
+            "Altera o nível de um jogador.\n\n"
 
             "`!addmoney @jogador <quantidade>`\n"
             "Adiciona moedas 💸.\n\n"
@@ -1571,7 +1597,7 @@ async def help(ctx):
 
 
     await ctx.send(embed=embed)
-
+    
 # ============================================================
 # !ATRIBUTOS
 # ============================================================
@@ -1818,17 +1844,13 @@ async def add(ctx, quantidade: int, *, atributo: str):
     )
 
 # ============================================================
-# !GIVEPOINTS
+# !GIVEPOINTS (STAFF)
 # ============================================================
 
 @bot.command()
 async def givepoints(ctx, membro: discord.Member, quantidade: int):
 
-    if not isinstance(ctx.author, discord.Member):
-        return
-
-
-    if not eh_staff(ctx.author):
+    if not is_staff(ctx.author):
 
         await ctx.send(
             "❌ Não tens permissão para utilizar este comando."
@@ -2400,10 +2422,27 @@ async def inventario(ctx):
 # ============================================================
 
 @bot.command()
-@commands.has_permissions(administrator=True)
 async def addbox(ctx, membro: discord.Member, quantidade: int):
 
-    adicionar_mysterybox(membro.id, quantidade)
+    if not is_staff(ctx.author):
+
+        return await ctx.send(
+            "❌ Não tens permissão para utilizar este comando."
+        )
+
+
+    if quantidade <= 0:
+
+        return await ctx.send(
+            "❌ A quantidade precisa ser maior que **0**."
+        )
+
+
+    adicionar_mysterybox(
+        membro.id,
+        quantidade
+    )
+
 
     await ctx.send(
         f"🎁 {membro.mention} recebeu **{quantidade} Mystery Box(es)**!"
@@ -2416,7 +2455,19 @@ async def addbox(ctx, membro: discord.Member, quantidade: int):
 @bot.command()
 async def givexp(ctx, membro: discord.Member, quantidade: int):
 
-    # COLOCA AQUI A TUA VERIFICAÇÃO DE STAFF SE TIVERES
+    if not is_staff(ctx.author):
+
+        return await ctx.send(
+            "❌ Não tens permissão para utilizar este comando."
+        )
+
+
+    if quantidade <= 0:
+
+        return await ctx.send(
+            "❌ A quantidade de XP precisa ser maior que **0**."
+        )
+
 
     subiu, novo_level = adicionar_xp(
         membro.id,
@@ -2470,13 +2521,15 @@ async def saldo(ctx):
 @bot.command()
 async def addmoney(ctx, membro: discord.Member, quantidade: int):
 
-    if not ctx.author.guild_permissions.administrator:
+    if not is_staff(ctx.author):
         return await ctx.send("❌ Sem permissão.")
+
 
     adicionar_dinheiro(
         membro.id,
         quantidade
     )
+
 
     await ctx.send(
         f"💸 {membro.mention} recebeu **{quantidade} moedas**."
@@ -2595,7 +2648,7 @@ class AdicionarProdutoButton(discord.ui.View):
         button: discord.ui.Button
     ):
 
-        if not interaction.user.guild_permissions.administrator:
+        if not is_staff(interaction.user):
 
             return await interaction.response.send_message(
                 "❌ Sem permissão.",
@@ -2615,7 +2668,7 @@ class AdicionarProdutoButton(discord.ui.View):
 @bot.command()
 async def addproduto(ctx):
 
-    if not ctx.author.guild_permissions.administrator:
+    if not is_staff(ctx.author):
 
         return await ctx.send(
             "❌ Não tens permissão."
@@ -2636,7 +2689,6 @@ async def addproduto(ctx):
         embed=embed,
         view=AdicionarProdutoButton()
     )
-
 
 # ============================================================
 # FORMULÁRIO REMOVER PRODUTO
@@ -2702,7 +2754,7 @@ class RemoverProdutoButton(discord.ui.View):
         button: discord.ui.Button
     ):
 
-        if not interaction.user.guild_permissions.administrator:
+        if not is_staff(interaction.user):
 
             return await interaction.response.send_message(
                 "❌ Sem permissão.",
@@ -2723,7 +2775,7 @@ class RemoverProdutoButton(discord.ui.View):
 @bot.command()
 async def removerproduto(ctx):
 
-    if not ctx.author.guild_permissions.administrator:
+    if not is_staff(ctx.author):
 
         return await ctx.send(
             "❌ Não tens permissão."
@@ -2951,6 +3003,47 @@ async def use(ctx, *, item):
 
     await ctx.send(
         embed=embed
+    )
+
+# ============================================================
+# !SETLEVEL (STAFF)
+# ============================================================
+
+@bot.command()
+async def setlevel(ctx, membro: discord.Member, nivel: int):
+
+    if not is_staff(ctx.author):
+
+        return await ctx.send(
+            "❌ Não tens permissão para utilizar este comando."
+        )
+
+
+    if nivel < 1:
+
+        return await ctx.send(
+            "❌ O nível mínimo é **1**."
+        )
+
+
+    cursor.execute(
+        """
+        UPDATE jogadores
+        SET level = %s
+        WHERE user_id = %s
+        """,
+        (
+            nivel,
+            membro.id
+        )
+    )
+
+
+    db.commit()
+
+
+    await ctx.send(
+        f"⭐ O nível de {membro.mention} foi alterado para **Level {nivel}**."
     )
 
 # ============================================================
