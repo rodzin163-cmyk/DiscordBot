@@ -2570,6 +2570,39 @@ class AdicionarProdutoModal(Modal):
 
 
 # ============================================================
+# BOTÃO PARA ABRIR FORMULÁRIO
+# ============================================================
+
+class AdicionarProdutoButton(discord.ui.View):
+
+    def __init__(self):
+        super().__init__(timeout=60)
+
+
+    @discord.ui.button(
+        label="🏪 Adicionar Produto",
+        style=discord.ButtonStyle.green
+    )
+    async def adicionar(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+
+        if not interaction.user.guild_permissions.administrator:
+
+            return await interaction.response.send_message(
+                "❌ Sem permissão.",
+                ephemeral=True
+            )
+
+
+        await interaction.response.send_modal(
+            AdicionarProdutoModal()
+        )
+
+
+# ============================================================
 # !ADDPRODUTO (STAFF)
 # ============================================================
 
@@ -2579,12 +2612,23 @@ async def addproduto(ctx):
     if not ctx.author.guild_permissions.administrator:
 
         return await ctx.send(
-            "❌ Não tens permissão para usar este comando."
+            "❌ Não tens permissão."
         )
 
 
-    await ctx.send_modal(
-        AdicionarProdutoModal()
+    embed = discord.Embed(
+        title="🏪 Adicionar Produto",
+        description=(
+            "Clica no botão abaixo para abrir "
+            "o formulário de criação de produto."
+        ),
+        color=discord.Color.green()
+    )
+
+
+    await ctx.send(
+        embed=embed,
+        view=AdicionarProdutoButton()
     )
 
 
