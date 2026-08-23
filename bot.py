@@ -839,8 +839,10 @@ def dar_recompensa_mysterybox(user_id, recompensa):
 
     elif tipo == "item":
 
-        # FUTURO: adicionar ao inventário
-        pass
+        adicionar_item(
+            user_id,
+            recompensa["valor"]
+        )
 
 
     return recompensa
