@@ -1393,6 +1393,9 @@ async def help(ctx):
 
             "`!addbox @jogador <quantidade>`\n"
             "Adiciona Mystery Boxes a um jogador."
+
+            "`!givexp @jogador <quantidade>`\n"
+            "Adiciona XP a um jogador."
         ),
         inline=False
     )
@@ -2242,6 +2245,43 @@ async def addbox(ctx, membro: discord.Member, quantidade: int):
     await ctx.send(
         f"🎁 {membro.mention} recebeu **{quantidade} Mystery Box(es)**!"
     )
+
+# ============================================================
+# !GIVEXP (STAFF)
+# ============================================================
+
+@bot.command()
+async def givexp(ctx, membro: discord.Member, quantidade: int):
+
+    # COLOCA AQUI A TUA VERIFICAÇÃO DE STAFF SE TIVERES
+
+    subiu, novo_level = adicionar_xp(
+        membro.id,
+        quantidade
+    )
+
+
+    mensagem = (
+        f"⭐ {quantidade} XP adicionados a {membro.mention}!"
+    )
+
+
+    if subiu:
+
+        mensagem += (
+            f"\n🎉 {membro.mention} subiu para o Level "
+            f"**{novo_level}**!"
+        )
+
+
+        if novo_level % 10 == 0:
+
+            mensagem += (
+                "\n🎁 Recebeu uma Mystery Box por atingir este nível!"
+            )
+
+
+    await ctx.send(mensagem)
 
 # ============================================================
 # TOKEN
