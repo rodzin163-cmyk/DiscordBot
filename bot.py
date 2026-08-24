@@ -5005,39 +5005,83 @@ async def bonus(ctx, membro: discord.Member = None):
     await ctx.send(embed=embed)
 
 # ============================================================
-# !MISSAO
+# !RANK
 # ============================================================
 
 @bot.command()
-async def missao(ctx, membro: discord.Member = None):
+async def rank(ctx):
 
-    if membro is None:
-        return await ctx.send(
-            "❌ Tens de mencionar o jogador que realizou a missão.\n"
-            "Exemplo: `!missao @jogador`"
-        )
-
-    raca = obter_raca(membro)
+    raca = obter_raca(ctx.author)
 
     if raca is None:
         return await ctx.send(
-            f"❌ {membro.mention} não possui um cargo de personagem "
+            "❌ Não tens um cargo de personagem válido "
             "(Humano, Oni ou Híbrido)."
         )
 
-    rank_atual = obter_rank(membro.id, raca)
+    rank_atual = obter_rank(ctx.author.id, raca)
 
     if rank_atual is None:
         return await ctx.send(
-            f"❌ Não foi possível encontrar o rank de {membro.mention}."
+            "❌ Não foi possível encontrar o teu rank."
         )
 
-    await ctx.send(
-        f"🎯 **Missão de {membro.display_name}**\n\n"
-        f"Raça: **{raca}**\n"
-        f"Rank atual: **{rank_atual['nome']}**\n"
-        f"Pontos de Rank: **{rank_atual['pontos']}**"
+    pontos = rank_atual["pontos"]
+
+    cursor.execute("""
+        SELECT nome, pontos_necessarios
+        FROM ranks
+        WHERE tipo = %s
+        AND pontos_necessarios > %s
+        ORDER BY pontos_necessarios ASC
+        LIMIT 1
+    """, (raca, pontos))
+
+    proximo = cursor.fetchone()
+
+    if proximo is None:
+        proximo_texto = "🏆 **Rank máximo**"
+    else:
+        nome_proximo = proximo[0]
+        pontos_proximo = proximo[1]
+        falta = pontos_proximo - pontos
+
+        proximo_texto = (
+            f"⬆️ Próximo rank: **{nome_proximo}**\n"
+            f"📈 Necessários: **{pontos_proximo} pontos**\n"
+            f"🎯 Faltam: **{falta} pontos**"
+        )
+
+    embed = discord.Embed(
+        title=f"⚔️ Rank de {ctx.author.display_name}",
+        color=discord.Color.dark_red()
     )
+
+    embed.add_field(
+        name="🧬 Raça",
+        value=raca,
+        inline=True
+    )
+
+    embed.add_field(
+        name="🏅 Rank atual",
+        value=rank_atual["nome"],
+        inline=True
+    )
+
+    embed.add_field(
+        name="⭐ Pontos de Rank",
+        value=str(pontos),
+        inline=True
+    )
+
+    embed.add_field(
+        name="📊 Progressão",
+        value=proximo_texto,
+        inline=False
+    )
+
+    await ctx.send(embed=embed)
     
 # ============================================================
 # TOKEN
