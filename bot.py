@@ -1601,135 +1601,219 @@ async def help(ctx):
 
     embed = discord.Embed(
         title="📚 Central de Comandos",
-        description="Comandos disponíveis do 👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ",
+        description=(
+            "Bem-vindo à central de comandos do 👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ!\n"
+            "Aqui podes consultar todos os sistemas disponíveis no servidor."
+        ),
         color=discord.Color.dark_red()
     )
 
+    # ========================================================
+    # 📊 ATRIBUTOS
+    # ========================================================
 
     embed.add_field(
         name="📊 Atributos",
         value=(
-            "`!atributos`\n"
-            "Mostra os teus atributos.\n\n"
+            "📋 `!atributos`\n"
+            "Mostra os teus atributos atuais.\n\n"
 
-            "`!atributos @jogador`\n"
+            "👤 `!atributos @jogador`\n"
             "Mostra os atributos de outro jogador.\n\n"
 
-            "`!add <quantidade> <atributo>`\n"
-            "Distribui pontos disponíveis nos atributos."
+            "➕ `!add <quantidade> <atributo>`\n"
+            "Distribui os teus pontos disponíveis por um atributo."
         ),
         inline=False
     )
 
+    # ========================================================
+    # 📈 PROGRESSÃO
+    # ========================================================
 
     embed.add_field(
         name="📈 Progressão",
         value=(
             "⭐ `!level`\n"
-            "Mostra o teu nível e XP.\n\n"
+            "Mostra o teu nível, XP e progresso.\n\n"
 
-            "⚔️ `!perfil`\n"
-            "Mostra o teu perfil completo, atributos e Mystery Boxes."
+            "👤 `!perfil`\n"
+            "Mostra o teu perfil completo, incluindo progressão, "
+            "atributos e Mystery Boxes."
         ),
         inline=False
     )
 
+    # ========================================================
+    # ⚔️ NICHIRIN & EQUIPAMENTOS
+    # ========================================================
 
     embed.add_field(
-        name="💸 Economia & Inventário",
+        name="⚔️ Nichirin & Equipamentos",
         value=(
-            "💰 `!saldo`\n"
+            "🗡️ `!nichirin`\n"
+            "Mostra as informações relacionadas com a tua Nichirin.\n\n"
+
+            "⚔️ `!equipar <item>`\n"
+            "Equipa um item que possuas no inventário.\n\n"
+
+            "❌ `!desequipar <item>`\n"
+            "Desequipa um item atualmente equipado.\n\n"
+
+            "🎒 Os equipamentos podem ser consultados através do "
+            "`!inventario`."
+        ),
+        inline=False
+    )
+
+    # ========================================================
+    # 💰 ECONOMIA
+    # ========================================================
+
+    embed.add_field(
+        name="💰 Economia",
+        value=(
+            "💸 `!saldo`\n"
             "Mostra a quantidade de moedas que possuis.\n\n"
 
             "🏪 `!loja`\n"
-            "Mostra os produtos disponíveis para compra.\n\n"
+            "Mostra os produtos atualmente disponíveis na loja.\n\n"
 
             "🛒 `!comprar <item>`\n"
-            "Compra um produto da loja.\n\n"
+            "Compra um produto disponível na loja."
+        ),
+        inline=False
+    )
 
+    # ========================================================
+    # 🎒 INVENTÁRIO
+    # ========================================================
+
+    embed.add_field(
+        name="🎒 Inventário",
+        value=(
             "🎒 `!inventario`\n"
-            "Mostra todos os itens guardados.\n\n"
+            "Mostra todos os itens que possuis.\n\n"
 
             "✨ `!use <item>`\n"
-            "Utiliza um item do inventário."
+            "Utiliza um item consumível do teu inventário.\n\n"
+
+            "⚔️ `!equipar <item>`\n"
+            "Equipa um equipamento que possuas.\n\n"
+
+            "❌ `!desequipar <item>`\n"
+            "Remove um equipamento atualmente equipado."
         ),
         inline=False
     )
 
+    # ========================================================
+    # 🎁 MYSTERY BOX
+    # ========================================================
 
     embed.add_field(
-        name="🎁 Mystery Box",
+        name="🎁 Mystery Boxes",
         value=(
-            "🎁 `Botão no !perfil`\n"
-            "Abre Mystery Boxes disponíveis.\n\n"
+            "🎁 `!perfil`\n"
+            "Através do teu perfil podes abrir as Mystery Boxes "
+            "disponíveis.\n\n"
 
-            "Possíveis recompensas:\n"
+            "As Mystery Boxes podem oferecer:\n"
             "⭐ XP\n"
             "📊 Pontos de Status\n"
+            "💰 Moedas\n"
             "🎭 Itens cosméticos\n"
-            "👕 Roupas e acessórios"
+            "👕 Roupas e acessórios\n"
+            "⚔️ Equipamentos"
         ),
         inline=False
     )
 
+    # ========================================================
+    # 🏋️ TREINAMENTOS
+    # ========================================================
 
     embed.add_field(
-        name="🏋️ Treinos",
+        name="🏋️ Treinamentos",
         value=(
-            "`!treinar iniciante`\n"
-            "Inicia um treino iniciante.\n\n"
+            "🥉 `!treinar iniciante`\n"
+            "Inicia um treinamento de nível iniciante.\n\n"
 
-            "`!treinar intermediario`\n"
-            "Inicia um treino intermediário.\n\n"
+            "🥈 `!treinar intermediario`\n"
+            "Inicia um treinamento de nível intermediário.\n\n"
 
-            "`!treinar extremo`\n"
-            "Inicia um treino extremo.\n\n"
+            "🥇 `!treinar extremo`\n"
+            "Inicia um treinamento de nível extremo.\n\n"
 
-            "`!finalizar`\n"
-            "Finaliza o treino após o tempo necessário.\n\n"
+            "✅ `!finalizar`\n"
+            "Finaliza o treinamento quando o tempo necessário "
+            "for cumprido.\n\n"
 
-            "`!cancelar`\n"
-            "Cancela o treino atual."
+            "❌ `!cancelar`\n"
+            "Cancela o treinamento atual."
         ),
         inline=False
     )
 
+    # ========================================================
+    # 🛡️ STAFF
+    # ========================================================
 
     embed.add_field(
         name="🛡️ Staff",
         value=(
-            "`!givepoints @jogador <quantidade>`\n"
-            "Adiciona pontos disponíveis.\n\n"
+            "🎯 `!givepoints @jogador <quantidade>`\n"
+            "Adiciona pontos disponíveis a um jogador.\n\n"
 
-            "`!addatributo @jogador <atributo> <quantidade>`\n"
-            "Adiciona pontos diretamente nos atributos.\n\n"
+            "📊 `!addatributo @jogador <atributo> <quantidade>`\n"
+            "Adiciona diretamente pontos a um atributo.\n\n"
 
-            "`!addbox @jogador <quantidade>`\n"
-            "Adiciona Mystery Boxes.\n\n"
+            "🎁 `!addbox @jogador <quantidade>`\n"
+            "Adiciona Mystery Boxes a um jogador.\n\n"
 
-            "`!givexp @jogador <quantidade>`\n"
+            "⭐ `!givexp @jogador <quantidade>`\n"
             "Adiciona XP a um jogador.\n\n"
 
-            "`!setlevel @jogador <nível>`\n"
-            "Altera o nível de um jogador.\n\n"
+            "📈 `!setlevel @jogador <nível>`\n"
+            "Define o nível de um jogador.\n\n"
 
-            "`!addmoney @jogador <quantidade>`\n"
-            "Adiciona moedas 💸.\n\n"
+            "💰 `!addmoney @jogador <quantidade>`\n"
+            "Adiciona moedas à conta de um jogador.\n\n"
 
-            "`!addproduto`\n"
-            "Abre o formulário para adicionar produtos à loja.\n\n"
+            "🏪 `!addproduto`\n"
+            "Abre o formulário para adicionar um produto à loja.\n\n"
 
-            "`!removerproduto`\n"
-            "Abre o formulário para remover produtos da loja."
+            "🗑️ `!removerproduto`\n"
+            "Abre o formulário para remover um produto da loja."
         ),
         inline=False
     )
 
+    # ========================================================
+    # 📖 ATRIBUTOS DISPONÍVEIS
+    # ========================================================
 
-    embed.set_footer(
-        text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ • Sistema de RP, Economia, Inventário e Progressão"
+    embed.add_field(
+        name="📖 Atributos disponíveis",
+        value=(
+            "⚡ **Velocidade** — rapidez e mobilidade.\n"
+            "💪 **Força** — força física e potência dos ataques.\n"
+            "🛡️ **Resistência** — capacidade física de suportar esforço.\n"
+            "⚔️ **Manejo** — domínio e utilização da espada.\n"
+            "💚 **Regeneração** — capacidade de recuperação dos Onis.\n"
+            "🌬️ **Fôlego** — capacidade respiratória dos humanos.\n"
+            "🩸 **Sangue** — poder relacionado ao sangue dos Onis."
+        ),
+        inline=False
     )
 
+    # ========================================================
+    # FOOTER
+    # ========================================================
+
+    embed.set_footer(
+        text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ • Sistema de RP, Combate, Economia e Progressão"
+    )
 
     await ctx.send(embed=embed)
 
