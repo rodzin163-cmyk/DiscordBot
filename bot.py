@@ -727,6 +727,95 @@ def obter_jogador(user_id):
     return cursor.fetchone()
 
 # ============================================================
+# SISTEMA DE EQUIPAMENTOS
+# ============================================================
+
+def criar_equipamento(user_id):
+
+    cursor.execute(
+        """
+        INSERT INTO equipamentos (user_id)
+        VALUES (%s)
+        ON CONFLICT (user_id) DO NOTHING
+        """,
+        (user_id,)
+    )
+
+    db.commit()
+
+
+def obter_equipamentos(user_id):
+
+    criar_equipamento(user_id)
+
+    cursor.execute(
+        """
+        SELECT tsuba, haori, nichirin, mascara
+        FROM equipamentos
+        WHERE user_id = %s
+        """,
+        (user_id,)
+    )
+
+    return cursor.fetchone()
+
+
+def equipar_item(user_id, tipo, item):
+
+    criar_equipamento(user_id)
+
+    tipos_validos = [
+        "tsuba",
+        "haori",
+        "nichirin",
+        "mascara"
+    ]
+
+    if tipo not in tipos_validos:
+        return False
+
+    cursor.execute(
+        f"""
+        UPDATE equipamentos
+        SET {tipo} = %s
+        WHERE user_id = %s
+        """,
+        (item, user_id)
+    )
+
+    db.commit()
+
+    return True
+
+
+def desequipar_item(user_id, tipo):
+
+    criar_equipamento(user_id)
+
+    tipos_validos = [
+        "tsuba",
+        "haori",
+        "nichirin",
+        "mascara"
+    ]
+
+    if tipo not in tipos_validos:
+        return False
+
+    cursor.execute(
+        f"""
+        UPDATE equipamentos
+        SET {tipo} = NULL
+        WHERE user_id = %s
+        """,
+        (user_id,)
+    )
+
+    db.commit()
+
+    return True
+
+# ============================================================
 # ADICIONAR PONTOS DE STATUS
 # ============================================================
 
@@ -1643,6 +1732,94 @@ async def help(ctx):
 
 
     await ctx.send(embed=embed)
+
+# ============================================================
+# OBTER EQUIPAMENTOS
+# ============================================================
+
+def obter_equipamentos(user_id):
+
+    cursor.execute(
+        """
+        SELECT tsuba, haori, nichirin, mascara
+        FROM equipamentos
+        WHERE user_id = %s
+        """,
+        (user_id,)
+    )
+
+    resultado = cursor.fetchone()
+
+    if resultado is None:
+
+        cursor.execute(
+            """
+            INSERT INTO equipamentos
+            (user_id, tsuba, haori, nichirin, mascara)
+            VALUES (%s, NULL, NULL, NULL, NULL)
+            ON CONFLICT (user_id) DO NOTHING
+            """,
+            (user_id,)
+        )
+
+        db.commit()
+
+        return (None, None, None, None)
+
+    return resultado
+
+
+# ============================================================
+# CALCULAR BÓNUS DOS EQUIPAMENTOS
+# ============================================================
+
+def calcular_bonus_equipamentos(user_id):
+
+    equipamentos = obter_equipamentos(user_id)
+
+    tsuba = equipamentos[0]
+    haori = equipamentos[1]
+    nichirin = equipamentos[2]
+    mascara = equipamentos[3]
+
+    bonus = {
+        "velocidade": 0,
+        "forca": 0,
+        "resistencia": 0,
+        "manejo": 0,
+        "regeneracao": 0,
+        "folego": 0,
+        "sangue": 0
+    }
+
+
+    # ========================================================
+    # TSUBA / HAORI / MÁSCARA
+    # ========================================================
+
+    for item in [tsuba, haori, mascara]:
+
+        if item in BONUS_EQUIPAMENTOS:
+
+            for atributo, valor in BONUS_EQUIPAMENTOS[item].items():
+
+                bonus[atributo] += valor
+
+
+    # ========================================================
+    # NICHIRIN
+    # ========================================================
+
+    if nichirin in CORES_NICHIRIN:
+
+        dados = CORES_NICHIRIN[nichirin]
+
+        for atributo, valor in dados["bonus"].items():
+
+            bonus[atributo] += valor
+
+
+    return bonus
     
 # ============================================================
 # !ATRIBUTOS
@@ -1654,12 +1831,9 @@ async def atributos(ctx, membro: discord.Member = None):
     if not isinstance(ctx.author, discord.Member):
         return
 
-
     alvo = membro if membro is not None else ctx.author
 
-
     tipo = obter_tipo(alvo)
-
 
     if tipo is None:
 
@@ -1670,9 +1844,7 @@ async def atributos(ctx, membro: discord.Member = None):
 
         return
 
-
     jogador = obter_jogador(alvo.id)
-
 
     if jogador is None:
 
@@ -1681,7 +1853,6 @@ async def atributos(ctx, membro: discord.Member = None):
         )
 
         return
-
 
     (
         user_id,
@@ -1710,7 +1881,7 @@ async def atributos(ctx, membro: discord.Member = None):
 
 
     # ========================================================
-    # BÔNUS DO MANEJO
+    # BÓNUS DO MANEJO
     # ========================================================
 
     bonus_manejo = calcular_bonus_manejo(manejo)
@@ -1721,9 +1892,53 @@ async def atributos(ctx, membro: discord.Member = None):
     forca_final = forca_real * (1 + bonus_manejo)
 
 
+    # ========================================================
+    # BÓNUS DOS EQUIPAMENTOS
+    # ========================================================
+
+    bonus_equipamentos = calcular_bonus_equipamentos(alvo.id)
+
+
+    velocidade_final *= (
+        1 + bonus_equipamentos["velocidade"] / 100
+    )
+
+    forca_final *= (
+        1 + bonus_equipamentos["forca"] / 100
+    )
+
+    resistencia_final = resistencia * (
+        1 + bonus_equipamentos["resistencia"] / 100
+    )
+
+    regeneracao_final = regeneracao * (
+        1 + bonus_equipamentos["regeneracao"] / 100
+    )
+
+    folego_final = folego_real * (
+        1 + bonus_equipamentos["folego"] / 100
+    )
+
+    sangue_final = sangue_real * (
+        1 + bonus_equipamentos["sangue"] / 100
+    )
+
+
     permitidos = ATRIBUTOS_PERMITIDOS[tipo]
 
     limite = LIMITES[tipo]
+
+
+    # ========================================================
+    # EQUIPAMENTOS
+    # ========================================================
+
+    equipamentos = obter_equipamentos(alvo.id)
+
+    tsuba = equipamentos[0]
+    haori = equipamentos[1]
+    nichirin = equipamentos[2]
+    mascara = equipamentos[3]
 
 
     # ========================================================
@@ -1755,7 +1970,6 @@ async def atributos(ctx, membro: discord.Member = None):
             "`🚫 Bloqueado`"
         )
 
-
     embed.add_field(
         name="\u200b",
         value=texto,
@@ -1782,7 +1996,6 @@ async def atributos(ctx, membro: discord.Member = None):
             "`🚫 Bloqueado`"
         )
 
-
     embed.add_field(
         name="\u200b",
         value=texto,
@@ -1798,7 +2011,9 @@ async def atributos(ctx, membro: discord.Member = None):
 
         texto = (
             f"🛡️ **Resistência**\n"
-            f"📊 Pontos: `{resistencia}/{limite}`"
+            f"📊 Pontos: `{resistencia}/{limite}`\n"
+            f"📈 Bónus Equipamento: "
+            f"**+{bonus_equipamentos['resistencia']:.1f}%**"
         )
 
     else:
@@ -1807,7 +2022,6 @@ async def atributos(ctx, membro: discord.Member = None):
             "🛡️ **Resistência**\n"
             "`🚫 Bloqueado`"
         )
-
 
     embed.add_field(
         name="\u200b",
@@ -1836,7 +2050,6 @@ async def atributos(ctx, membro: discord.Member = None):
             "`🚫 Bloqueado`"
         )
 
-
     embed.add_field(
         name="\u200b",
         value=texto,
@@ -1852,7 +2065,9 @@ async def atributos(ctx, membro: discord.Member = None):
 
         texto = (
             f"🩸 **Regeneração**\n"
-            f"📊 Pontos: `{regeneracao}/{limite}`"
+            f"📊 Pontos: `{regeneracao}/{limite}`\n"
+            f"📈 Bónus Equipamento: "
+            f"**+{bonus_equipamentos['regeneracao']:.1f}%**"
         )
 
     else:
@@ -1861,7 +2076,6 @@ async def atributos(ctx, membro: discord.Member = None):
             "🩸 **Regeneração**\n"
             "`🚫 Bloqueado`"
         )
-
 
     embed.add_field(
         name="\u200b",
@@ -1879,7 +2093,7 @@ async def atributos(ctx, membro: discord.Member = None):
         texto = (
             f"🌬️ **Fôlego**\n"
             f"📊 Pontos: `{folego}/{limite}`\n"
-            f"💨 Valor: **{folego_real:,}**"
+            f"💨 Valor: **{folego_final:,.0f}**"
         ).replace(",", ".")
 
     else:
@@ -1888,7 +2102,6 @@ async def atributos(ctx, membro: discord.Member = None):
             "🌬️ **Fôlego**\n"
             "`🚫 Bloqueado`"
         )
-
 
     embed.add_field(
         name="\u200b",
@@ -1906,7 +2119,7 @@ async def atributos(ctx, membro: discord.Member = None):
         texto = (
             f"🩸 **Sangue**\n"
             f"📊 Pontos: `{sangue}/{limite}`\n"
-            f"🩸 Valor: **{sangue_real:,}**"
+            f"🩸 Valor: **{sangue_final:,.0f}**"
         ).replace(",", ".")
 
     else:
@@ -1915,7 +2128,6 @@ async def atributos(ctx, membro: discord.Member = None):
             "🩸 **Sangue**\n"
             "`🚫 Bloqueado`"
         )
-
 
     embed.add_field(
         name="\u200b",
@@ -1946,8 +2158,42 @@ async def atributos(ctx, membro: discord.Member = None):
     )
 
 
-    await ctx.send(embed=embed)
+    # ========================================================
+    # EQUIPAMENTO
+    # ========================================================
 
+    nichirin_texto = "Nenhuma"
+
+    if nichirin in CORES_NICHIRIN:
+
+        dados_nichirin = CORES_NICHIRIN[nichirin]
+
+        nichirin_texto = (
+            f"{dados_nichirin['emoji']} "
+            f"**{dados_nichirin['nome']}**"
+        )
+
+    elif nichirin:
+
+        nichirin_texto = f"**{nichirin}**"
+
+
+    equipamento_texto = (
+        f"⚔️ **Tsuba:** {tsuba or 'Nenhuma'}\n"
+        f"👘 **Haori:** {haori or 'Nenhum'}\n"
+        f"🎭 **Máscara:** {mascara or 'Nenhuma'}\n"
+        f"🎨 **Nichirin:** {nichirin_texto}"
+    )
+
+
+    embed.add_field(
+        name="⚔️ Equipamentos Equipados",
+        value=equipamento_texto,
+        inline=False
+    )
+
+
+    await ctx.send(embed=embed)
 # ============================================================
 # !ADD
 # ============================================================
@@ -2594,12 +2840,21 @@ async def level(ctx, membro: discord.Member = None):
 @bot.command()
 async def perfil(ctx):
 
+    # ========================================================
+    # PROGRESSÃO
+    # ========================================================
+
     nivel = obter_nivel(ctx.author.id)
 
     xp = nivel[0]
     level = nivel[1]
 
     mysteryboxes = obter_mysterybox(ctx.author.id)
+
+
+    # ========================================================
+    # ATRIBUTOS
+    # ========================================================
 
     jogador = obter_jogador(ctx.author.id)
 
@@ -2612,11 +2867,65 @@ async def perfil(ctx):
     sangue = jogador[8]
 
 
+    # ========================================================
+    # EQUIPAMENTOS
+    # ========================================================
+
+    equipamentos = obter_equipamentos(ctx.author.id)
+
+    tsuba = equipamentos[0]
+    haori = equipamentos[1]
+    nichirin = equipamentos[2]
+    mascara = equipamentos[3]
+
+
+    # ========================================================
+    # NICHIRIN
+    # ========================================================
+
+    if nichirin in CORES_NICHIRIN:
+
+        dados_nichirin = CORES_NICHIRIN[nichirin]
+
+        nichirin_texto = (
+            f"{dados_nichirin['emoji']} "
+            f"**{dados_nichirin['nome']}**"
+        )
+
+    elif nichirin:
+
+        nichirin_texto = f"🎨 **{nichirin}**"
+
+    else:
+
+        nichirin_texto = "❌ Nenhuma"
+
+
+    # ========================================================
+    # EQUIPAMENTOS
+    # ========================================================
+
+    equipamentos_texto = (
+        f"⚔️ **Tsuba:** {tsuba or '❌ Nenhuma'}\n"
+        f"👘 **Haori:** {haori or '❌ Nenhum'}\n"
+        f"🎭 **Máscara:** {mascara or '❌ Nenhuma'}\n"
+        f"🎨 **Nichirin:** {nichirin_texto}"
+    )
+
+
+    # ========================================================
+    # EMBED
+    # ========================================================
+
     embed = discord.Embed(
         title=f"⚔️ Perfil de {ctx.author.display_name}",
         color=discord.Color.blue()
     )
 
+
+    # ========================================================
+    # PROGRESSÃO
+    # ========================================================
 
     embed.add_field(
         name="⭐ Progressão",
@@ -2629,26 +2938,45 @@ async def perfil(ctx):
     )
 
 
+    # ========================================================
+    # ATRIBUTOS
+    # ========================================================
+
     embed.add_field(
         name="📊 Atributos",
         value=(
-            f"⚡ Velocidade: **{velocidade}**\n"
-            f"💪 Força: **{forca}**\n"
-            f"🛡️ Resistência: **{resistencia}**\n"
-            f"⚔️ Manejo: **{manejo}**\n"
-            f"❤️ Regeneração: **{regeneracao}**\n"
-            f"🌊 Fôlego: **{folego}**\n"
-            f"🩸 Sangue: **{sangue}**"
+            f"⚡ Velocidade: **{velocidade} pontos**\n"
+            f"💪 Força: **{forca} pontos**\n"
+            f"🛡️ Resistência: **{resistencia} pontos**\n"
+            f"⚔️ Manejo: **{manejo} pontos**\n"
+            f"❤️ Regeneração: **{regeneracao} pontos**\n"
+            f"🌊 Fôlego: **{folego} pontos**\n"
+            f"🩸 Sangue: **{sangue} pontos**"
         ),
         inline=False
     )
 
 
+    # ========================================================
+    # EQUIPAMENTOS
+    # ========================================================
+
+    embed.add_field(
+        name="⚔️ Equipamentos Equipados",
+        value=equipamentos_texto,
+        inline=False
+    )
+
+
+    # ========================================================
+    # ENVIO
+    # ========================================================
+
     await ctx.send(
         embed=embed,
         view=MysteryBoxView()
     )
-
+    
 # ============================================================
 # !INVENTARIO
 # ============================================================
@@ -3310,6 +3638,969 @@ async def setlevel(ctx, membro: discord.Member, nivel: int):
     await ctx.send(
         f"⭐ O nível de {membro.mention} foi alterado para **Level {nivel}**."
     )
+
+# ============================================================
+# !EQUIPAR
+# ============================================================
+
+@bot.command()
+async def equipar(ctx, *, nome_item: str = None):
+
+    if nome_item is None:
+
+        return await ctx.send(
+            "❌ Indica o nome do item que queres equipar.\n\n"
+            "Exemplo:\n"
+            "`!equipar Tsuba do Kyojuro Rengoku`"
+        )
+
+
+    inventario = obter_inventario(ctx.author.id)
+
+    item_encontrado = None
+
+
+    # ========================================================
+    # PROCURAR PELO NOME
+    # ========================================================
+
+    for item, quantidade in inventario:
+
+        if item.lower() == nome_item.lower():
+
+            if quantidade > 0:
+                item_encontrado = item
+
+            break
+
+
+    if item_encontrado is None:
+
+        return await ctx.send(
+            f"❌ Não tens **{nome_item}** no teu inventário."
+        )
+
+
+    # ========================================================
+    # IDENTIFICAR TIPO
+    # ========================================================
+
+    nome = item_encontrado.lower()
+
+    tipo = None
+    emoji = None
+
+
+    if nome.startswith("tsuba"):
+
+        tipo = "tsuba"
+        emoji = "⚔️"
+
+
+    elif nome.startswith("haori"):
+
+        tipo = "haori"
+        emoji = "👘"
+
+
+    elif nome.startswith("máscara") or nome.startswith("mascara"):
+
+        tipo = "mascara"
+        emoji = "🎭"
+
+
+    else:
+
+        return await ctx.send(
+            "❌ Este item não pode ser equipado."
+        )
+
+
+    # ========================================================
+    # EQUIPAR
+    # ========================================================
+
+    equipar_item(
+        ctx.author.id,
+        tipo,
+        item_encontrado
+    )
+
+
+    await ctx.send(
+        f"✅ **Equipamento alterado!**\n\n"
+        f"{emoji} **{item_encontrado}** foi equipado."
+    )
+
+# ============================================================
+# CORES DA NICHIRIN
+# ============================================================
+
+CORES_NICHIRIN = {
+
+    # ========================================================
+    # CORES COMUNS
+    # ========================================================
+
+    "preta": {
+        "nome": "Preta",
+        "emoji": "⚫",
+        "raridade": "comum",
+        "bonus": {
+            "forca": 5
+        }
+    },
+
+    "azul": {
+        "nome": "Azul",
+        "emoji": "🔵",
+        "raridade": "comum",
+        "bonus": {
+            "resistencia": 5
+        }
+    },
+
+    "vermelha": {
+        "nome": "Vermelha",
+        "emoji": "🔴",
+        "raridade": "comum",
+        "bonus": {
+            "forca": 5
+        }
+    },
+
+    "verde": {
+        "nome": "Verde",
+        "emoji": "🟢",
+        "raridade": "comum",
+        "bonus": {
+            "velocidade": 5
+        }
+    },
+
+    "branca": {
+        "nome": "Branca",
+        "emoji": "⚪",
+        "raridade": "comum",
+        "bonus": {
+            "folego": 5
+        }
+    },
+
+
+    # ========================================================
+    # CORES ESPECIAIS
+    # ========================================================
+
+    "amarela": {
+        "nome": "Amarela",
+        "emoji": "🟡",
+        "raridade": "rara",
+        "bonus": {
+            "velocidade": 10
+        }
+    },
+
+    "rosa": {
+        "nome": "Rosa",
+        "emoji": "🩷",
+        "raridade": "rara",
+        "bonus": {
+            "velocidade": 10,
+            "forca": 5
+        }
+    },
+
+    "roxa": {
+        "nome": "Roxa",
+        "emoji": "🟣",
+        "raridade": "rara",
+        "bonus": {
+            "velocidade": 10,
+            "folego": 5
+        }
+    },
+
+    "verde-clara": {
+        "nome": "Verde-clara",
+        "emoji": "🟢",
+        "raridade": "rara",
+        "bonus": {
+            "forca": 10,
+            "velocidade": 5
+        }
+    },
+
+    "branca-cinza": {
+        "nome": "Branca-Cinza",
+        "emoji": "🌫️",
+        "raridade": "rara",
+        "bonus": {
+            "velocidade": 10,
+            "folego": 10
+        }
+    },
+
+    "vermelho-alaranjada": {
+        "nome": "Vermelho-alaranjada",
+        "emoji": "🔥",
+        "raridade": "rara",
+        "bonus": {
+            "forca": 15,
+            "resistencia": 5
+        }
+    },
+
+    "azul-escura": {
+        "nome": "Azul-escura",
+        "emoji": "🔵",
+        "raridade": "rara",
+        "bonus": {
+            "resistencia": 10,
+            "folego": 10
+        }
+    },
+
+    "cinza": {
+        "nome": "Cinza",
+        "emoji": "🩶",
+        "raridade": "rara",
+        "bonus": {
+            "forca": 15,
+            "resistencia": 10
+        }
+    },
+
+    "ambar": {
+        "nome": "Âmbar",
+        "emoji": "🟠",
+        "raridade": "rara",
+        "bonus": {
+            "velocidade": 10,
+            "forca": 10
+        }
+    }
+}
+
+# ============================================================
+# SISTEMA DE NICHIRIN
+# ============================================================
+
+def criar_nichirin(user_id):
+
+    cursor.execute(
+        """
+        INSERT INTO nichirin_jogadores (user_id)
+        VALUES (%s)
+        ON CONFLICT (user_id) DO NOTHING
+        """,
+        (user_id,)
+    )
+
+    db.commit()
+
+
+def obter_cores_nichirin(user_id):
+
+    criar_nichirin(user_id)
+
+    cursor.execute(
+        """
+        SELECT cores
+        FROM nichirin_jogadores
+        WHERE user_id = %s
+        """,
+        (user_id,)
+    )
+
+    resultado = cursor.fetchone()
+
+    if resultado is None:
+        return []
+
+    return resultado[0] or []
+
+
+def adicionar_cor_nichirin(user_id, cor):
+
+    criar_nichirin(user_id)
+
+    cores = obter_cores_nichirin(user_id)
+
+    cor = cor.lower()
+
+    if cor not in cores:
+
+        cores.append(cor)
+
+        cursor.execute(
+            """
+            UPDATE nichirin_jogadores
+            SET cores = %s
+            WHERE user_id = %s
+            """,
+            (cores, user_id)
+        )
+
+        db.commit()
+
+        return True
+
+    return False
+
+# ============================================================
+# !NICHIRIN
+# ============================================================
+
+@bot.command()
+async def nichirin(ctx, *, cor: str = None):
+
+    if cor is None:
+
+        return await ctx.send(
+            "❌ Indica a cor da Nichirin.\n\n"
+            "Exemplo:\n"
+            "`!nichirin amarela`"
+        )
+
+
+    cor = cor.lower()
+
+
+    if cor not in CORES_NICHIRIN:
+
+        return await ctx.send(
+            "❌ Essa cor de Nichirin não existe."
+        )
+
+
+    cores = obter_cores_nichirin(ctx.author.id)
+
+
+    if cor not in cores:
+
+        return await ctx.send(
+            f"❌ Tu não tens a Nichirin **"
+            f"{CORES_NICHIRIN[cor]['nome']}** desbloqueada."
+        )
+
+
+    equipar_item(
+        ctx.author.id,
+        "nichirin",
+        cor
+    )
+
+
+    dados = CORES_NICHIRIN[cor]
+
+
+    await ctx.send(
+        f"🎨 **Nichirin equipada!**\n\n"
+        f"{dados['emoji']} Cor: **{dados['nome']}**"
+    )
+
+# ============================================================
+# BÓNUS DOS EQUIPAMENTOS
+# ============================================================
+
+BONUS_EQUIPAMENTOS = {
+
+    # ========================================================
+    # TSUBAS
+    # ========================================================
+
+    "Tsuba do Giyu Tomioka": {
+        "resistencia": 5
+    },
+
+    "Tsuba do Kyojuro Rengoku": {
+        "forca": 7
+    },
+
+    "Tsuba do Tengen Uzui": {
+        "velocidade": 5,
+        "forca": 3
+    },
+
+
+    # ========================================================
+    # HAORIS / ROUPAS
+    # ========================================================
+
+    "Haori do Kyojuro Rengoku": {
+        "forca": 8,
+        "resistencia": 3
+    },
+
+    "Haori do Giyu Tomioka": {
+        "resistencia": 5,
+        "folego": 5
+    },
+
+    "Roupa do Akaza": {
+        "forca": 8,
+        "velocidade": 5
+    },
+
+    "Roupa do Douma": {
+        "folego": 8,
+        "velocidade": 5
+    },
+
+    "Roupa do Kokushibo": {
+        "forca": 8,
+        "velocidade": 8
+    },
+
+    "Roupa do Muzan": {
+        "forca": 10,
+        "velocidade": 10,
+        "regeneracao": 5
+    },
+
+
+    # ========================================================
+    # MÁSCARAS
+    # ========================================================
+
+    "Máscara de Sabito": {
+        "velocidade": 5
+    },
+
+    "Máscara de Makomo": {
+        "folego": 5
+    },
+
+    "Máscara de Urokodaki": {
+        "resistencia": 5
+    },
+
+    "Máscara de Javali": {
+        "forca": 5
+    },
+
+    "Máscara Oni Simples": {
+        "forca": 3,
+        "resistencia": 3
+    },
+
+    "Máscara Oni Demoníaca": {
+        "forca": 7,
+        "regeneracao": 3
+    },
+
+    "Ratos musculosos do Uzui": {
+        "forca": 5,
+        "velocidade": 5
+    },
+
+    "Chuntaro": {
+        "velocidade": 5
+    }
+}
+
+
+# ============================================================
+# BÓNUS DAS NICHIRINS
+# ============================================================
+
+CORES_NICHIRIN = {
+
+    # ========================================================
+    # COMUNS
+    # ========================================================
+
+    "preta": {
+        "nome": "Preta",
+        "emoji": "⚫",
+        "raridade": "comum",
+        "bonus": {
+            "forca": 5
+        }
+    },
+
+    "azul": {
+        "nome": "Azul",
+        "emoji": "🔵",
+        "raridade": "comum",
+        "bonus": {
+            "resistencia": 5
+        }
+    },
+
+    "vermelha": {
+        "nome": "Vermelha",
+        "emoji": "🔴",
+        "raridade": "comum",
+        "bonus": {
+            "forca": 5
+        }
+    },
+
+    "verde": {
+        "nome": "Verde",
+        "emoji": "🟢",
+        "raridade": "comum",
+        "bonus": {
+            "velocidade": 5
+        }
+    },
+
+    "branca": {
+        "nome": "Branca",
+        "emoji": "⚪",
+        "raridade": "comum",
+        "bonus": {
+            "folego": 5
+        }
+    },
+
+
+    # ========================================================
+    # ESPECIAIS
+    # ========================================================
+
+    "amarela": {
+        "nome": "Amarela",
+        "emoji": "🟡",
+        "raridade": "rara",
+        "bonus": {
+            "velocidade": 10
+        }
+    },
+
+    "rosa": {
+        "nome": "Rosa",
+        "emoji": "🩷",
+        "raridade": "rara",
+        "bonus": {
+            "velocidade": 10,
+            "forca": 5
+        }
+    },
+
+    "roxa": {
+        "nome": "Roxa",
+        "emoji": "🟣",
+        "raridade": "rara",
+        "bonus": {
+            "velocidade": 10,
+            "folego": 5
+        }
+    },
+
+    "verde-clara": {
+        "nome": "Verde-clara",
+        "emoji": "🟢",
+        "raridade": "rara",
+        "bonus": {
+            "forca": 10,
+            "velocidade": 5
+        }
+    },
+
+    "branca-cinza": {
+        "nome": "Branca-Cinza",
+        "emoji": "🌫️",
+        "raridade": "rara",
+        "bonus": {
+            "velocidade": 10,
+            "folego": 10
+        }
+    },
+
+    "vermelho-alaranjada": {
+        "nome": "Vermelho-alaranjada",
+        "emoji": "🔥",
+        "raridade": "rara",
+        "bonus": {
+            "forca": 15,
+            "resistencia": 5
+        }
+    },
+
+    "azul-escura": {
+        "nome": "Azul-escura",
+        "emoji": "🔵",
+        "raridade": "rara",
+        "bonus": {
+            "resistencia": 10,
+            "folego": 10
+        }
+    },
+
+    "cinza": {
+        "nome": "Cinza",
+        "emoji": "🩶",
+        "raridade": "rara",
+        "bonus": {
+            "forca": 15,
+            "resistencia": 10
+        }
+    },
+
+    "ambar": {
+        "nome": "Âmbar",
+        "emoji": "🟠",
+        "raridade": "rara",
+        "bonus": {
+            "velocidade": 10,
+            "forca": 10
+        }
+    }
+}
+
+# ============================================================
+# EQUIPAR ITEM
+# ============================================================
+
+@bot.command()
+async def equipar(ctx, *, item: str = None):
+
+    if item is None:
+
+        return await ctx.send(
+            "❌ Indica o item que queres equipar.\n"
+            "Exemplo: `!equipar Tsuba do Giyu Tomioka`"
+        )
+
+
+    item = item.strip()
+
+
+    # ========================================================
+    # VERIFICAR INVENTÁRIO
+    # ========================================================
+
+    inventario = obter_inventario(ctx.author.id)
+
+    possui_item = False
+
+    for nome_item, quantidade in inventario:
+
+        if nome_item.lower() == item.lower() and quantidade > 0:
+
+            possui_item = True
+            item = nome_item
+            break
+
+
+    if not possui_item:
+
+        return await ctx.send(
+            f"❌ Não tens **{item}** no teu inventário."
+        )
+
+
+    # ========================================================
+    # IDENTIFICAR TIPO
+    # ========================================================
+
+    tipo_item = None
+
+    if item.startswith("Tsuba"):
+
+        tipo_item = "tsuba"
+
+    elif item.startswith("Haori") or item.startswith("Roupa"):
+
+        tipo_item = "haori"
+
+    elif item.startswith("Máscara"):
+
+        tipo_item = "mascara"
+
+
+    if tipo_item is None:
+
+        return await ctx.send(
+            "❌ Esse item não pode ser equipado."
+        )
+
+
+    # ========================================================
+    # VERIFICAR RESTRIÇÃO
+    # ========================================================
+
+    tipo_jogador = obter_tipo(ctx.author)
+
+
+    restricoes = {
+
+        "Tsuba do Giyu Tomioka": "humano",
+        "Tsuba do Kyojuro Rengoku": "humano",
+        "Tsuba do Tengen Uzui": "humano",
+
+        "Haori do Kyojuro Rengoku": "humano",
+        "Haori do Giyu Tomioka": "humano",
+
+        "Roupa do Akaza": "oni",
+        "Roupa do Douma": "oni",
+        "Roupa do Kokushibo": "oni",
+        "Roupa do Muzan": "oni"
+    }
+
+
+    restricao = restricoes.get(item)
+
+
+    if restricao is not None:
+
+        if tipo_jogador != restricao and tipo_jogador != "hibrido":
+
+            return await ctx.send(
+                f"❌ **{item}** só pode ser utilizado por "
+                f"**{restricao.capitalize()}s**."
+            )
+
+
+    # ========================================================
+    # EQUIPAR
+    # ========================================================
+
+    coluna = tipo_item
+
+
+    cursor.execute(
+        f"""
+        INSERT INTO equipamentos
+        (user_id, {coluna})
+        VALUES (%s, %s)
+
+        ON CONFLICT (user_id)
+        DO UPDATE SET {coluna} = EXCLUDED.{coluna}
+        """,
+        (
+            ctx.author.id,
+            item
+        )
+    )
+
+
+    db.commit()
+
+
+    await ctx.send(
+        f"✅ {ctx.author.mention} equipou "
+        f"**{item}**!\n\n"
+        f"⚔️ O equipamento já está a aplicar os seus bônus."
+    )
+
+# ============================================================
+# DESEQUIPAR ITEM
+# ============================================================
+
+@bot.command()
+async def desequipar(ctx, tipo: str = None):
+
+    if tipo is None:
+
+        return await ctx.send(
+            "❌ Indica o tipo de equipamento.\n\n"
+            "`!desequipar tsuba`\n"
+            "`!desequipar haori`\n"
+            "`!desequipar mascara`"
+        )
+
+
+    tipo = tipo.lower()
+
+
+    colunas_validas = {
+        "tsuba": "tsuba",
+        "haori": "haori",
+        "mascara": "mascara"
+    }
+
+
+    if tipo not in colunas_validas:
+
+        return await ctx.send(
+            "❌ Tipo inválido.\n"
+            "Usa: `tsuba`, `haori` ou `mascara`."
+        )
+
+
+    coluna = colunas_validas[tipo]
+
+
+    cursor.execute(
+        f"""
+        UPDATE equipamentos
+        SET {coluna} = NULL
+        WHERE user_id = %s
+        """,
+        (ctx.author.id,)
+    )
+
+
+    db.commit()
+
+
+    await ctx.send(
+        f"✅ {ctx.author.mention} desequipou o seu "
+        f"**{tipo.capitalize()}**."
+    )
+
+# ============================================================
+# !NICHIRIN
+# ============================================================
+
+@bot.command()
+async def nichirin(ctx):
+
+    embed = discord.Embed(
+        title="🎨 Coloração da Nichirin",
+        description=(
+            "Escolhe a cor da tua Nichirin.\n"
+            "A cor escolhida ficará equipada no teu perfil."
+        ),
+        color=discord.Color.dark_red()
+    )
+
+    for chave, dados in CORES_NICHIRIN.items():
+
+        bonus_texto = " / ".join(
+            f"+{valor}% {atributo.capitalize()}"
+            for atributo, valor in dados["bonus"].items()
+        )
+
+        embed.add_field(
+            name=f"{dados['emoji']} {dados['nome']}",
+            value=(
+                f"**Raridade:** {dados['raridade'].capitalize()}\n"
+                f"**Bónus:** {bonus_texto}\n"
+                f"`!nichirin {chave}`"
+            ),
+            inline=True
+        )
+
+    await ctx.send(embed=embed)
+
+# ============================================================
+# !NICHIRIN <COR>
+# ============================================================
+
+@bot.command()
+async def escolhernichirin(ctx, cor: str = None):
+
+    if cor is None:
+
+        return await ctx.send(
+            "❌ Indica uma cor.\n"
+            "Exemplo: `!escolhernichirin preta`"
+        )
+
+    cor = cor.lower().strip()
+
+    if cor not in CORES_NICHIRIN:
+
+        return await ctx.send(
+            "❌ Essa coloração de Nichirin não existe."
+        )
+
+    dados = CORES_NICHIRIN[cor]
+
+    cursor.execute(
+        """
+        INSERT INTO equipamentos
+        (user_id, nichirin)
+        VALUES (%s, %s)
+
+        ON CONFLICT (user_id)
+        DO UPDATE SET nichirin = EXCLUDED.nichirin
+        """,
+        (
+            ctx.author.id,
+            cor
+        )
+    )
+
+    db.commit()
+
+    bonus_texto = "\n".join(
+        f"{dados['emoji']} +{valor}% {atributo.capitalize()}"
+        for atributo, valor in dados["bonus"].items()
+    )
+
+    await ctx.send(
+        f"🎨 {ctx.author.mention} equipou a Nichirin "
+        f"**{dados['nome']}**!\n\n"
+        f"**Bónus:**\n"
+        f"{bonus_texto}"
+    )
+
+# ============================================================
+# !SETNICHIRIN (STAFF)
+# ============================================================
+
+@bot.command()
+async def setnichirin(ctx, membro: discord.Member = None, cor: str = None):
+
+    if not is_staff(ctx.author):
+
+        return await ctx.send(
+            "❌ Não tens permissão para usar este comando."
+        )
+
+
+    if membro is None or cor is None:
+
+        return await ctx.send(
+            "❌ Uso correto:\n"
+            "`!setnichirin @jogador cor`\n\n"
+            "Exemplo:\n"
+            "`!setnichirin @jogador preta`"
+        )
+
+
+    cor = cor.lower().strip()
+
+
+    if cor not in CORES_NICHIRIN:
+
+        return await ctx.send(
+            "❌ Essa cor de Nichirin não existe."
+        )
+
+
+    dados = CORES_NICHIRIN[cor]
+
+
+    cursor.execute(
+        """
+        INSERT INTO equipamentos
+        (user_id, nichirin)
+        VALUES (%s, %s)
+
+        ON CONFLICT (user_id)
+        DO UPDATE SET nichirin = EXCLUDED.nichirin
+        """,
+        (
+            membro.id,
+            cor
+        )
+    )
+
+
+    db.commit()
+
+
+    bonus_texto = "\n".join(
+        f"{dados['emoji']} +{valor}% {atributo.capitalize()}"
+        for atributo, valor in dados["bonus"].items()
+    )
+
+
+    await ctx.send(
+        f"🎨 **Nichirin definida!**\n\n"
+        f"👤 Jogador: {membro.mention}\n"
+        f"⚔️ Coloração: **{dados['nome']}**\n\n"
+        f"**Bónus:**\n"
+        f"{bonus_texto}"
+    )
+    
 # ============================================================
 # TOKEN
 # ============================================================
