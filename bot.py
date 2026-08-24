@@ -1596,226 +1596,439 @@ async def addatributo(ctx, membro: discord.Member = None, atributo: str = None, 
 # !HELP
 # ============================================================
 
+class HelpView(discord.ui.View):
+
+    def __init__(self, author):
+        super().__init__(timeout=180)
+        self.author = author
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.author.id:
+            await interaction.response.send_message(
+                "❌ Apenas quem abriu este menu pode utilizá-lo.",
+                ephemeral=True
+            )
+            return False
+
+        return True
+
+    @discord.ui.select(
+        placeholder="📚 Escolhe uma categoria...",
+        options=[
+            discord.SelectOption(
+                label="Início",
+                emoji="🏠",
+                description="Voltar à página principal",
+                value="inicio"
+            ),
+            discord.SelectOption(
+                label="Jogador",
+                emoji="👤",
+                description="Perfil, atributos, nível e progressão",
+                value="jogador"
+            ),
+            discord.SelectOption(
+                label="Equipamentos",
+                emoji="⚔️",
+                description="Nichirin e equipamentos",
+                value="equipamentos"
+            ),
+            discord.SelectOption(
+                label="Treinamentos",
+                emoji="🏋️",
+                description="Sistema de treinamentos",
+                value="treinos"
+            ),
+            discord.SelectOption(
+                label="Economia",
+                emoji="💰",
+                description="Moedas, loja e compras",
+                value="economia"
+            ),
+            discord.SelectOption(
+                label="Staff",
+                emoji="🛡️",
+                description="Comandos exclusivos da Staff",
+                value="staff"
+            )
+        ]
+    )
+    async def categoria(
+        self,
+        interaction: discord.Interaction,
+        select: discord.ui.Select
+    ):
+
+        escolha = select.values[0]
+
+        # ====================================================
+        # 🏠 INÍCIO
+        # ====================================================
+
+        if escolha == "inicio":
+
+            embed = discord.Embed(
+                title="📚 Central de Comandos",
+                description=(
+                    "Bem-vindo à central de comandos do "
+                    "👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ!\n\n"
+                    "Utiliza o menu abaixo para encontrar "
+                    "todos os comandos disponíveis.\n\n"
+                    "📌 **Categorias disponíveis:**\n"
+                    "👤 Jogador\n"
+                    "⚔️ Equipamentos\n"
+                    "🏋️ Treinamentos\n"
+                    "💰 Economia\n"
+                    "🛡️ Staff"
+                ),
+                color=discord.Color.dark_red()
+            )
+
+            embed.add_field(
+                name="💡 Como utilizar",
+                value=(
+                    "Seleciona uma categoria no menu acima "
+                    "para veres os comandos e a forma correta "
+                    "de os utilizar."
+                ),
+                inline=False
+            )
+
+            embed.set_footer(
+                text="👻 Last Soul • Central de Comandos"
+            )
+
+        # ====================================================
+        # 👤 JOGADOR
+        # ====================================================
+
+        elif escolha == "jogador":
+
+            embed = discord.Embed(
+                title="👤 Comandos de Jogador",
+                description="Comandos relacionados com o teu personagem.",
+                color=discord.Color.blue()
+            )
+
+            embed.add_field(
+                name="📊 Atributos",
+                value=(
+                    "`!atributos`\n"
+                    "Mostra os teus atributos atuais.\n\n"
+
+                    "`!atributos @jogador`\n"
+                    "Mostra os atributos de outro jogador.\n\n"
+
+                    "`!add <quantidade> <atributo>`\n"
+                    "Distribui os teus pontos disponíveis por um atributo."
+                ),
+                inline=False
+            )
+
+            embed.add_field(
+                name="📈 Progressão",
+                value=(
+                    "`!level`\n"
+                    "Mostra o teu nível, XP e progresso.\n\n"
+
+                    "`!level @jogador`\n"
+                    "Mostra o nível e progresso de outro jogador.\n\n"
+
+                    "`!perfil`\n"
+                    "Mostra o teu perfil completo."
+                ),
+                inline=False
+            )
+
+            embed.add_field(
+                name="🎒 Inventário",
+                value=(
+                    "`!inventario`\n"
+                    "Mostra todos os itens que possuis.\n\n"
+
+                    "`!use <item>`\n"
+                    "Utiliza um item consumível do inventário."
+                ),
+                inline=False
+            )
+
+        # ====================================================
+        # ⚔️ EQUIPAMENTOS
+        # ====================================================
+
+        elif escolha == "equipamentos":
+
+            embed = discord.Embed(
+                title="⚔️ Nichirin & Equipamentos",
+                description="Gerencia a tua Nichirin e os teus equipamentos.",
+                color=discord.Color.red()
+            )
+
+            embed.add_field(
+                name="🎨 Nichirin",
+                value=(
+                    "`!nichirin`\n"
+                    "Mostra as cores de Nichirin disponíveis e os seus bónus.\n\n"
+
+                    "`!escolhernichirin <cor>`\n"
+                    "Escolhe e equipa uma cor de Nichirin.\n\n"
+                    "Exemplo:\n"
+                    "`!escolhernichirin preta`"
+                ),
+                inline=False
+            )
+
+            embed.add_field(
+                name="⚔️ Equipar",
+                value=(
+                    "`!equipar <item>`\n"
+                    "Equipa um item que possuas no inventário.\n\n"
+
+                    "Exemplo:\n"
+                    "`!equipar Tsuba do Giyu Tomioka`"
+                ),
+                inline=False
+            )
+
+            embed.add_field(
+                name="❌ Desequipar",
+                value=(
+                    "`!desequipar <tipo>`\n"
+                    "Desequipa um equipamento.\n\n"
+
+                    "Tipos disponíveis:\n"
+                    "`tsuba`\n"
+                    "`haori`\n"
+                    "`mascara`"
+                ),
+                inline=False
+            )
+
+        # ====================================================
+        # 🏋️ TREINOS
+        # ====================================================
+
+        elif escolha == "treinos":
+
+            embed = discord.Embed(
+                title="🏋️ Comandos de Treinamento",
+                description="Treina o teu personagem para obter pontos.",
+                color=discord.Color.orange()
+            )
+
+            embed.add_field(
+                name="🏋️ Iniciar Treino",
+                value=(
+                    "`!treinar <tipo>`\n"
+                    "Inicia um treinamento.\n\n"
+
+                    "**Tipos de treino:**\n"
+                    "🥉 `iniciante`\n"
+                    "🥈 `intermediario`\n"
+                    "🥇 `extremo`\n\n"
+
+                    "Exemplo:\n"
+                    "`!treinar iniciante`"
+                ),
+                inline=False
+            )
+
+            embed.add_field(
+                name="⏱️ Gerir Treino",
+                value=(
+                    "`!finalizar`\n"
+                    "Finaliza o treino quando o tempo terminar.\n\n"
+
+                    "`!cancelar`\n"
+                    "Cancela o treino atual."
+                ),
+                inline=False
+            )
+
+        # ====================================================
+        # 💰 ECONOMIA
+        # ====================================================
+
+        elif escolha == "economia":
+
+            embed = discord.Embed(
+                title="💰 Economia",
+                description="Gerencia as tuas moedas e compras.",
+                color=discord.Color.gold()
+            )
+
+            embed.add_field(
+                name="💸 Carteira",
+                value=(
+                    "`!saldo`\n"
+                    "Mostra a quantidade de moedas que possuis."
+                ),
+                inline=False
+            )
+
+            embed.add_field(
+                name="🏪 Loja",
+                value=(
+                    "`!loja`\n"
+                    "Mostra os produtos disponíveis na loja.\n\n"
+
+                    "`!comprar <item>`\n"
+                    "Compra um produto da loja.\n\n"
+
+                    "Exemplo:\n"
+                    "`!comprar Pequena Casa`"
+                ),
+                inline=False
+            )
+
+        # ====================================================
+        # 🛡️ STAFF
+        # ====================================================
+
+        elif escolha == "staff":
+
+            if not is_staff(interaction.user):
+                return await interaction.response.send_message(
+                    "❌ Esta categoria é exclusiva da Staff.",
+                    ephemeral=True
+                )
+
+            embed = discord.Embed(
+                title="🛡️ Comandos da Staff",
+                description="Comandos exclusivos para membros da Staff.",
+                color=discord.Color.dark_red()
+            )
+
+            embed.add_field(
+                name="📊 Pontos & Atributos",
+                value=(
+                    "`!givepoints @jogador <quantidade>`\n"
+                    "Adiciona pontos disponíveis a um jogador.\n\n"
+
+                    "`!addatributo @jogador <atributo> <quantidade>`\n"
+                    "Adiciona diretamente pontos a um atributo."
+                ),
+                inline=False
+            )
+
+            embed.add_field(
+                name="⭐ XP & Level",
+                value=(
+                    "`!givexp @jogador <quantidade>`\n"
+                    "Adiciona XP a um jogador.\n\n"
+
+                    "`!setlevel @jogador <nível>`\n"
+                    "Define o nível de um jogador."
+                ),
+                inline=False
+            )
+
+            embed.add_field(
+                name="🎁 Mystery Box",
+                value=(
+                    "`!addbox @jogador <quantidade>`\n"
+                    "Adiciona Mystery Boxes a um jogador."
+                ),
+                inline=False
+            )
+
+            embed.add_field(
+                name="💰 Dinheiro",
+                value=(
+                    "`!addmoney @jogador <quantidade>`\n"
+                    "Adiciona moedas à conta de um jogador."
+                ),
+                inline=False
+            )
+
+            embed.add_field(
+                name="🏪 Gestão da Loja",
+                value=(
+                    "`!addproduto`\n"
+                    "Abre o formulário para adicionar um produto.\n\n"
+
+                    "`!removerproduto`\n"
+                    "Abre o formulário para remover um produto."
+                ),
+                inline=False
+            )
+
+            embed.add_field(
+                name="⚔️ Nichirin",
+                value=(
+                    "`!setnichirin @jogador <cor>`\n"
+                    "Define a Nichirin de um jogador.\n\n"
+
+                    "Exemplo:\n"
+                    "`!setnichirin @jogador preta`"
+                ),
+                inline=False
+            )
+
+        embed.set_footer(
+            text="👻 Last Soul • Usa o menu acima para navegar"
+        )
+
+        await interaction.response.edit_message(
+            embed=embed,
+            view=self
+        )
+
+
 @bot.command()
 async def help(ctx):
 
     embed = discord.Embed(
         title="📚 Central de Comandos",
         description=(
-            "Bem-vindo à central de comandos do 👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ!\n"
-            "Aqui podes consultar todos os sistemas disponíveis no servidor."
+            "Bem-vindo à central de comandos do "
+            "👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ!\n\n"
+            "Aqui podes consultar todos os sistemas "
+            "e comandos disponíveis no servidor.\n\n"
+            "👇 **Seleciona uma categoria no menu abaixo.**"
         ),
         color=discord.Color.dark_red()
     )
 
-    # ========================================================
-    # 📊 ATRIBUTOS
-    # ========================================================
-
     embed.add_field(
-        name="📊 Atributos",
-        value=(
-            "📋 `!atributos`\n"
-            "Mostra os teus atributos atuais.\n\n"
-
-            "👤 `!atributos @jogador`\n"
-            "Mostra os atributos de outro jogador.\n\n"
-
-            "➕ `!add <quantidade> <atributo>`\n"
-            "Distribui os teus pontos disponíveis por um atributo."
-        ),
-        inline=False
+        name="👤 Jogador",
+        value="Perfil, atributos, nível e inventário.",
+        inline=True
     )
 
-    # ========================================================
-    # 📈 PROGRESSÃO
-    # ========================================================
-
     embed.add_field(
-        name="📈 Progressão",
-        value=(
-            "⭐ `!level`\n"
-            "Mostra o teu nível, XP e progresso.\n\n"
-
-            "👤 `!perfil`\n"
-            "Mostra o teu perfil completo, incluindo progressão, "
-            "atributos e Mystery Boxes."
-        ),
-        inline=False
+        name="⚔️ Equipamentos",
+        value="Nichirin e equipamentos.",
+        inline=True
     )
-
-    # ========================================================
-    # ⚔️ NICHIRIN & EQUIPAMENTOS
-    # ========================================================
-
-    embed.add_field(
-        name="⚔️ Nichirin & Equipamentos",
-        value=(
-            "🗡️ `!nichirin`\n"
-            "Mostra as informações relacionadas com a tua Nichirin.\n\n"
-
-            "⚔️ `!equipar <item>`\n"
-            "Equipa um item que possuas no inventário.\n\n"
-
-            "❌ `!desequipar <item>`\n"
-            "Desequipa um item atualmente equipado.\n\n"
-
-            "🎒 Os equipamentos podem ser consultados através do "
-            "`!inventario`."
-        ),
-        inline=False
-    )
-
-    # ========================================================
-    # 💰 ECONOMIA
-    # ========================================================
-
-    embed.add_field(
-        name="💰 Economia",
-        value=(
-            "💸 `!saldo`\n"
-            "Mostra a quantidade de moedas que possuis.\n\n"
-
-            "🏪 `!loja`\n"
-            "Mostra os produtos atualmente disponíveis na loja.\n\n"
-
-            "🛒 `!comprar <item>`\n"
-            "Compra um produto disponível na loja."
-        ),
-        inline=False
-    )
-
-    # ========================================================
-    # 🎒 INVENTÁRIO
-    # ========================================================
-
-    embed.add_field(
-        name="🎒 Inventário",
-        value=(
-            "🎒 `!inventario`\n"
-            "Mostra todos os itens que possuis.\n\n"
-
-            "✨ `!use <item>`\n"
-            "Utiliza um item consumível do teu inventário.\n\n"
-
-            "⚔️ `!equipar <item>`\n"
-            "Equipa um equipamento que possuas.\n\n"
-
-            "❌ `!desequipar <item>`\n"
-            "Remove um equipamento atualmente equipado."
-        ),
-        inline=False
-    )
-
-    # ========================================================
-    # 🎁 MYSTERY BOX
-    # ========================================================
-
-    embed.add_field(
-        name="🎁 Mystery Boxes",
-        value=(
-            "🎁 `!perfil`\n"
-            "Através do teu perfil podes abrir as Mystery Boxes "
-            "disponíveis.\n\n"
-
-            "As Mystery Boxes podem oferecer:\n"
-            "⭐ XP\n"
-            "📊 Pontos de Status\n"
-            "💰 Moedas\n"
-            "🎭 Itens cosméticos\n"
-            "👕 Roupas e acessórios\n"
-            "⚔️ Equipamentos"
-        ),
-        inline=False
-    )
-
-    # ========================================================
-    # 🏋️ TREINAMENTOS
-    # ========================================================
 
     embed.add_field(
         name="🏋️ Treinamentos",
-        value=(
-            "🥉 `!treinar iniciante`\n"
-            "Inicia um treinamento de nível iniciante.\n\n"
-
-            "🥈 `!treinar intermediario`\n"
-            "Inicia um treinamento de nível intermediário.\n\n"
-
-            "🥇 `!treinar extremo`\n"
-            "Inicia um treinamento de nível extremo.\n\n"
-
-            "✅ `!finalizar`\n"
-            "Finaliza o treinamento quando o tempo necessário "
-            "for cumprido.\n\n"
-
-            "❌ `!cancelar`\n"
-            "Cancela o treinamento atual."
-        ),
-        inline=False
+        value="Sistema de treinos.",
+        inline=True
     )
-
-    # ========================================================
-    # 🛡️ STAFF
-    # ========================================================
 
     embed.add_field(
-        name="🛡️ Staff",
-        value=(
-            "🎯 `!givepoints @jogador <quantidade>`\n"
-            "Adiciona pontos disponíveis a um jogador.\n\n"
-
-            "📊 `!addatributo @jogador <atributo> <quantidade>`\n"
-            "Adiciona diretamente pontos a um atributo.\n\n"
-
-            "🎁 `!addbox @jogador <quantidade>`\n"
-            "Adiciona Mystery Boxes a um jogador.\n\n"
-
-            "⭐ `!givexp @jogador <quantidade>`\n"
-            "Adiciona XP a um jogador.\n\n"
-
-            "📈 `!setlevel @jogador <nível>`\n"
-            "Define o nível de um jogador.\n\n"
-
-            "💰 `!addmoney @jogador <quantidade>`\n"
-            "Adiciona moedas à conta de um jogador.\n\n"
-
-            "🏪 `!addproduto`\n"
-            "Abre o formulário para adicionar um produto à loja.\n\n"
-
-            "🗑️ `!removerproduto`\n"
-            "Abre o formulário para remover um produto da loja."
-        ),
-        inline=False
+        name="💰 Economia",
+        value="Saldo, loja e compras.",
+        inline=True
     )
 
-    # ========================================================
-    # 📖 ATRIBUTOS DISPONÍVEIS
-    # ========================================================
-
-    embed.add_field(
-        name="📖 Atributos disponíveis",
-        value=(
-            "⚡ **Velocidade** — rapidez e mobilidade.\n"
-            "💪 **Força** — força física e potência dos ataques.\n"
-            "🛡️ **Resistência** — capacidade física de suportar esforço.\n"
-            "⚔️ **Manejo** — domínio e utilização da espada.\n"
-            "💚 **Regeneração** — capacidade de recuperação dos Onis.\n"
-            "🌬️ **Fôlego** — capacidade respiratória dos humanos.\n"
-            "🩸 **Sangue** — poder relacionado ao sangue dos Onis."
-        ),
-        inline=False
-    )
-
-    # ========================================================
-    # FOOTER
-    # ========================================================
+    if is_staff(ctx.author):
+        embed.add_field(
+            name="🛡️ Staff",
+            value="Comandos exclusivos da Staff.",
+            inline=True
+        )
 
     embed.set_footer(
-        text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ • Sistema de RP, Combate, Economia e Progressão"
+        text="👻 Last Soul • Central de Comandos"
     )
 
-    await ctx.send(embed=embed)
+    await ctx.send(
+        embed=embed,
+        view=HelpView(ctx.author)
+    )
 
 # ============================================================
 # OBTER EQUIPAMENTOS
