@@ -507,6 +507,57 @@ cursor = db.cursor()
 
 print("DATABASE POSTGRESQL LIGADA")
 
+# ============================================================
+# SISTEMA DE RANKS
+# ============================================================
+
+def obter_pontos_rank(user_id):
+    cursor.execute("""
+        SELECT pontos_rank
+        FROM progresso_rank
+        WHERE user_id = %s
+    """, (user_id,))
+
+    resultado = cursor.fetchone()
+
+    if resultado is None:
+        cursor.execute("""
+            INSERT INTO progresso_rank (user_id, pontos_rank)
+            VALUES (%s, 0)
+            ON CONFLICT (user_id) DO NOTHING
+        """, (user_id,))
+
+        db.commit()
+        return 0
+
+    return resultado[0]
+
+
+def obter_rank(user_id, tipo):
+    pontos = obter_pontos_rank(user_id)
+
+    cursor.execute("""
+        SELECT nome, ordem, pontos_necessarios, cargo_id
+        FROM ranks
+        WHERE tipo = %s
+        AND pontos_necessarios <= %s
+        ORDER BY pontos_necessarios DESC
+        LIMIT 1
+    """, (tipo, pontos))
+
+    resultado = cursor.fetchone()
+
+    if resultado is None:
+        return None
+
+    return {
+        "nome": resultado[0],
+        "ordem": resultado[1],
+        "pontos_necessarios": resultado[2],
+        "cargo_id": resultado[3],
+        "pontos": pontos
+    }
+
 
 # ============================================================
 # TABELA DE JOGADORES
