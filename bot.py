@@ -652,6 +652,52 @@ LIMITES = {
 
 
 # ============================================================
+# BASE DOS ATRIBUTOS
+# ============================================================
+
+BASE_VELOCIDADE = 15
+BASE_FORCA = 10
+BASE_FOLEGO = 150_000
+BASE_SANGUE = 100_000
+
+# ============================================================
+# CONVERSÃO DOS PONTOS PARA VALORES REAIS
+# ============================================================
+
+def calcular_velocidade(pontos):
+
+    return BASE_VELOCIDADE + pontos
+
+
+def calcular_forca(pontos):
+
+    return BASE_FORCA + pontos
+
+
+def calcular_folego(pontos):
+
+    blocos = pontos // 150
+
+    return BASE_FOLEGO + (blocos * 50_000)
+
+
+def calcular_sangue(pontos):
+
+    blocos = pontos // 150
+
+    return BASE_SANGUE + (blocos * 150_000)
+
+# ============================================================
+# BÔNUS DE MANEJO
+# ============================================================
+
+def calcular_bonus_manejo(manejo):
+
+    blocos = manejo // 100
+
+    return blocos * 0.015
+
+# ============================================================
 # FUNÇÕES DA BASE DE DADOS
 # ============================================================
 
@@ -1608,9 +1654,12 @@ async def atributos(ctx, membro: discord.Member = None):
     if not isinstance(ctx.author, discord.Member):
         return
 
+
     alvo = membro if membro is not None else ctx.author
 
+
     tipo = obter_tipo(alvo)
+
 
     if tipo is None:
 
@@ -1621,7 +1670,18 @@ async def atributos(ctx, membro: discord.Member = None):
 
         return
 
+
     jogador = obter_jogador(alvo.id)
+
+
+    if jogador is None:
+
+        await ctx.send(
+            f"❌ {alvo.mention} ainda não possui atributos."
+        )
+
+        return
+
 
     (
         user_id,
@@ -1635,49 +1695,238 @@ async def atributos(ctx, membro: discord.Member = None):
         sangue
     ) = jogador
 
-    valores = {
-        "velocidade": velocidade,
-        "forca": forca,
-        "resistencia": resistencia,
-        "manejo": manejo,
-        "regeneracao": regeneracao,
-        "folego": folego,
-        "sangue": sangue
-    }
+
+    # ========================================================
+    # VALORES REAIS
+    # ========================================================
+
+    velocidade_real = calcular_velocidade(velocidade)
+
+    forca_real = calcular_forca(forca)
+
+    folego_real = calcular_folego(folego)
+
+    sangue_real = calcular_sangue(sangue)
+
+
+    # ========================================================
+    # BÔNUS DO MANEJO
+    # ========================================================
+
+    bonus_manejo = calcular_bonus_manejo(manejo)
+
+
+    velocidade_final = velocidade_real * (1 + bonus_manejo)
+
+    forca_final = forca_real * (1 + bonus_manejo)
+
 
     permitidos = ATRIBUTOS_PERMITIDOS[tipo]
+
     limite = LIMITES[tipo]
+
+
+    # ========================================================
+    # EMBED
+    # ========================================================
 
     embed = discord.Embed(
         title=f"📊 Atributos de {alvo.display_name}",
         color=discord.Color.dark_red()
     )
 
-    for atributo, dados in ATRIBUTOS.items():
 
-        emoji = dados["emoji"]
-        nome = dados["nome"]
-        valor = valores[atributo]
+    # ========================================================
+    # VELOCIDADE
+    # ========================================================
 
-        if atributo in permitidos:
+    if "velocidade" in permitidos:
 
-            texto = (
-                f"{emoji} **{nome}**\n"
-                f"`{valor}/{limite}`"
-            )
-
-        else:
-
-            texto = (
-                f"{emoji} **{nome}**\n"
-                f"`🚫 Bloqueado`"
-            )
-
-        embed.add_field(
-            name="\u200b",
-            value=texto,
-            inline=True
+        texto = (
+            f"⚡ **Velocidade**\n"
+            f"📊 Pontos: `{velocidade}/{limite}`\n"
+            f"🏃 Valor: **{velocidade_final:.2f} km/h**"
         )
+
+    else:
+
+        texto = (
+            "⚡ **Velocidade**\n"
+            "`🚫 Bloqueado`"
+        )
+
+
+    embed.add_field(
+        name="\u200b",
+        value=texto,
+        inline=True
+    )
+
+
+    # ========================================================
+    # FORÇA
+    # ========================================================
+
+    if "forca" in permitidos:
+
+        texto = (
+            f"💪 **Força**\n"
+            f"📊 Pontos: `{forca}/{limite}`\n"
+            f"⚖️ Valor: **{forca_final:.2f} kg**"
+        )
+
+    else:
+
+        texto = (
+            "💪 **Força**\n"
+            "`🚫 Bloqueado`"
+        )
+
+
+    embed.add_field(
+        name="\u200b",
+        value=texto,
+        inline=True
+    )
+
+
+    # ========================================================
+    # RESISTÊNCIA
+    # ========================================================
+
+    if "resistencia" in permitidos:
+
+        texto = (
+            f"🛡️ **Resistência**\n"
+            f"📊 Pontos: `{resistencia}/{limite}`"
+        )
+
+    else:
+
+        texto = (
+            "🛡️ **Resistência**\n"
+            "`🚫 Bloqueado`"
+        )
+
+
+    embed.add_field(
+        name="\u200b",
+        value=texto,
+        inline=True
+    )
+
+
+    # ========================================================
+    # MANEJO
+    # ========================================================
+
+    if "manejo" in permitidos:
+
+        texto = (
+            f"⚔️ **Manejo**\n"
+            f"📊 Pontos: `{manejo}/{limite}`\n"
+            f"⚡ Bónus: **+{bonus_manejo * 100:.1f}% Velocidade**\n"
+            f"💪 Bónus: **+{bonus_manejo * 100:.1f}% Força**"
+        )
+
+    else:
+
+        texto = (
+            "⚔️ **Manejo**\n"
+            "`🚫 Bloqueado`"
+        )
+
+
+    embed.add_field(
+        name="\u200b",
+        value=texto,
+        inline=True
+    )
+
+
+    # ========================================================
+    # REGENERAÇÃO
+    # ========================================================
+
+    if "regeneracao" in permitidos:
+
+        texto = (
+            f"🩸 **Regeneração**\n"
+            f"📊 Pontos: `{regeneracao}/{limite}`"
+        )
+
+    else:
+
+        texto = (
+            "🩸 **Regeneração**\n"
+            "`🚫 Bloqueado`"
+        )
+
+
+    embed.add_field(
+        name="\u200b",
+        value=texto,
+        inline=True
+    )
+
+
+    # ========================================================
+    # FÔLEGO
+    # ========================================================
+
+    if "folego" in permitidos:
+
+        texto = (
+            f"🌬️ **Fôlego**\n"
+            f"📊 Pontos: `{folego}/{limite}`\n"
+            f"💨 Valor: **{folego_real:,}**"
+        ).replace(",", ".")
+
+    else:
+
+        texto = (
+            "🌬️ **Fôlego**\n"
+            "`🚫 Bloqueado`"
+        )
+
+
+    embed.add_field(
+        name="\u200b",
+        value=texto,
+        inline=True
+    )
+
+
+    # ========================================================
+    # SANGUE
+    # ========================================================
+
+    if "sangue" in permitidos:
+
+        texto = (
+            f"🩸 **Sangue**\n"
+            f"📊 Pontos: `{sangue}/{limite}`\n"
+            f"🩸 Valor: **{sangue_real:,}**"
+        ).replace(",", ".")
+
+    else:
+
+        texto = (
+            "🩸 **Sangue**\n"
+            "`🚫 Bloqueado`"
+        )
+
+
+    embed.add_field(
+        name="\u200b",
+        value=texto,
+        inline=True
+    )
+
+
+    # ========================================================
+    # PONTOS DISPONÍVEIS
+    # ========================================================
 
     embed.add_field(
         name="📦 Pontos disponíveis",
@@ -1685,14 +1934,19 @@ async def atributos(ctx, membro: discord.Member = None):
         inline=False
     )
 
+
+    # ========================================================
+    # CLASSE
+    # ========================================================
+
     embed.add_field(
         name="👤 Classe",
         value=f"**{tipo.capitalize()}**",
         inline=False
     )
 
-    await ctx.send(embed=embed)
 
+    await ctx.send(embed=embed)
 
 # ============================================================
 # !ADD
