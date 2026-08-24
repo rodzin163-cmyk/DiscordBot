@@ -558,6 +558,25 @@ def obter_rank(user_id, tipo):
         "pontos": pontos
     }
 
+# ============================================================
+# DETETAR RAÇA DO PERSONAGEM
+# ============================================================
+
+def obter_raca(membro):
+
+    cargos = [cargo.id for cargo in membro.roles]
+
+    if CARGO_HUMANO in cargos:
+        return "Humano"
+
+    if CARGO_ONI in cargos:
+        return "Oni"
+
+    if CARGO_HIBRIDO in cargos:
+        return "Oni"
+
+    return None
+
 
 # ============================================================
 # TABELA DE JOGADORES
