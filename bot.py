@@ -3940,58 +3940,6 @@ def adicionar_cor_nichirin(user_id, cor):
     return False
 
 # ============================================================
-# !NICHIRIN
-# ============================================================
-
-@bot.command()
-async def nichirin(ctx, *, cor: str = None):
-
-    if cor is None:
-
-        return await ctx.send(
-            "❌ Indica a cor da Nichirin.\n\n"
-            "Exemplo:\n"
-            "`!nichirin amarela`"
-        )
-
-
-    cor = cor.lower()
-
-
-    if cor not in CORES_NICHIRIN:
-
-        return await ctx.send(
-            "❌ Essa cor de Nichirin não existe."
-        )
-
-
-    cores = obter_cores_nichirin(ctx.author.id)
-
-
-    if cor not in cores:
-
-        return await ctx.send(
-            f"❌ Tu não tens a Nichirin **"
-            f"{CORES_NICHIRIN[cor]['nome']}** desbloqueada."
-        )
-
-
-    equipar_item(
-        ctx.author.id,
-        "nichirin",
-        cor
-    )
-
-
-    dados = CORES_NICHIRIN[cor]
-
-
-    await ctx.send(
-        f"🎨 **Nichirin equipada!**\n\n"
-        f"{dados['emoji']} Cor: **{dados['nome']}**"
-    )
-
-# ============================================================
 # BÓNUS DOS EQUIPAMENTOS
 # ============================================================
 
