@@ -1741,6 +1741,19 @@ class HelpView(discord.ui.View):
             )
 
             embed.add_field(
+                name="📈 Bónus",
+                value=(
+                    "`!bonus`\n"
+                    "Mostra todos os bónus de atributos "
+                    "recebidos pelos equipamentos atualmente equipados.\n\n"
+
+                    "`!bonus @jogador`\n"
+                    "Mostra os bónus de equipamento de outro jogador."
+                ),
+                inline=False
+            )
+
+            embed.add_field(
                 name="🎒 Inventário",
                 value=(
                     "`!inventario`\n"
@@ -1772,6 +1785,7 @@ class HelpView(discord.ui.View):
 
                     "`!escolhernichirin <cor>`\n"
                     "Escolhe e equipa uma cor de Nichirin.\n\n"
+
                     "Exemplo:\n"
                     "`!escolhernichirin preta`"
                 ),
@@ -1992,7 +2006,7 @@ async def help(ctx):
 
     embed.add_field(
         name="👤 Jogador",
-        value="Perfil, atributos, nível e inventário.",
+        value="Perfil, atributos, nível, bónus e inventário.",
         inline=True
     )
 
@@ -2029,7 +2043,6 @@ async def help(ctx):
         embed=embed,
         view=HelpView(ctx.author)
     )
-
 # ============================================================
 # OBTER EQUIPAMENTOS
 # ============================================================
@@ -4752,6 +4765,135 @@ async def setnichirin(ctx, membro: discord.Member = None, cor: str = None):
         f"**Bónus:**\n"
         f"{bonus_texto}"
     )
+
+# ============================================================
+# !BONUS
+# ============================================================
+
+@bot.command()
+async def bonus(ctx, membro: discord.Member = None):
+
+    if not isinstance(ctx.author, discord.Member):
+        return
+
+    alvo = membro if membro is not None else ctx.author
+
+    tipo = obter_tipo(alvo)
+
+    if tipo is None:
+        return await ctx.send(
+            f"❌ {alvo.mention} não tem um cargo válido de "
+            f"**Humano, Oni ou Híbrido**."
+        )
+
+    # ========================================================
+    # OBTER BÓNUS DOS EQUIPAMENTOS
+    # ========================================================
+
+    bonus_equipamentos = calcular_bonus_equipamentos(alvo.id)
+
+    equipamentos = obter_equipamentos(alvo.id)
+
+    tsuba = equipamentos[0]
+    haori = equipamentos[1]
+    nichirin = equipamentos[2]
+    mascara = equipamentos[3]
+
+    # ========================================================
+    # EMBED
+    # ========================================================
+
+    embed = discord.Embed(
+        title=f"📈 Bónus de {alvo.display_name}",
+        description=(
+            "Aqui estão os bónus de atributos recebidos "
+            "pelos teus equipamentos atualmente equipados."
+        ),
+        color=discord.Color.dark_red()
+    )
+
+    # ========================================================
+    # BÓNUS
+    # ========================================================
+
+    bonus_texto = ""
+
+    if bonus_equipamentos["velocidade"] != 0:
+        bonus_texto += (
+            f"⚡ **Velocidade:** "
+            f"+{bonus_equipamentos['velocidade']:.1f}%\n"
+        )
+
+    if bonus_equipamentos["forca"] != 0:
+        bonus_texto += (
+            f"💪 **Força:** "
+            f"+{bonus_equipamentos['forca']:.1f}%\n"
+        )
+
+    if bonus_equipamentos["resistencia"] != 0:
+        bonus_texto += (
+            f"🛡️ **Resistência:** "
+            f"+{bonus_equipamentos['resistencia']:.1f}%\n"
+        )
+
+    if bonus_equipamentos["manejo"] != 0:
+        bonus_texto += (
+            f"⚔️ **Manejo:** "
+            f"+{bonus_equipamentos['manejo']:.1f}%\n"
+        )
+
+    if bonus_equipamentos["regeneracao"] != 0:
+        bonus_texto += (
+            f"🩸 **Regeneração:** "
+            f"+{bonus_equipamentos['regeneracao']:.1f}%\n"
+        )
+
+    if bonus_equipamentos["folego"] != 0:
+        bonus_texto += (
+            f"🌬️ **Fôlego:** "
+            f"+{bonus_equipamentos['folego']:.1f}%\n"
+        )
+
+    if bonus_equipamentos["sangue"] != 0:
+        bonus_texto += (
+            f"🩸 **Sangue:** "
+            f"+{bonus_equipamentos['sangue']:.1f}%\n"
+        )
+
+    # ========================================================
+    # SEM BÓNUS
+    # ========================================================
+
+    if not bonus_texto:
+        bonus_texto = "❌ Não tens nenhum bónus de equipamento ativo."
+
+    embed.add_field(
+        name="📊 Bónus de Atributos",
+        value=bonus_texto,
+        inline=False
+    )
+
+    # ========================================================
+    # EQUIPAMENTOS
+    # ========================================================
+
+    equipamentos_texto = (
+        f"⚔️ **Tsuba:** {tsuba or 'Nenhuma'}\n"
+        f"👘 **Haori:** {haori or 'Nenhum'}\n"
+        f"🎭 **Máscara:** {mascara or 'Nenhuma'}"
+    )
+
+    embed.add_field(
+        name="⚔️ Equipamentos",
+        value=equipamentos_texto,
+        inline=False
+    )
+
+    embed.set_footer(
+        text="👻 Last Soul • Bónus provenientes dos equipamentos"
+    )
+
+    await ctx.send(embed=embed)
     
 # ============================================================
 # TOKEN
