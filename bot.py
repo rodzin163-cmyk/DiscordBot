@@ -5003,6 +5003,41 @@ async def bonus(ctx, membro: discord.Member = None):
     )
 
     await ctx.send(embed=embed)
+
+# ============================================================
+# !MISSAO
+# ============================================================
+
+@bot.command()
+async def missao(ctx, membro: discord.Member = None):
+
+    if membro is None:
+        return await ctx.send(
+            "❌ Tens de mencionar o jogador que realizou a missão.\n"
+            "Exemplo: `!missao @jogador`"
+        )
+
+    raca = obter_raca(membro)
+
+    if raca is None:
+        return await ctx.send(
+            f"❌ {membro.mention} não possui um cargo de personagem "
+            "(Humano, Oni ou Híbrido)."
+        )
+
+    rank_atual = obter_rank(membro.id, raca)
+
+    if rank_atual is None:
+        return await ctx.send(
+            f"❌ Não foi possível encontrar o rank de {membro.mention}."
+        )
+
+    await ctx.send(
+        f"🎯 **Missão de {membro.display_name}**\n\n"
+        f"Raça: **{raca}**\n"
+        f"Rank atual: **{rank_atual['nome']}**\n"
+        f"Pontos de Rank: **{rank_atual['pontos']}**"
+    )
     
 # ============================================================
 # TOKEN
