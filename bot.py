@@ -507,6 +507,11 @@ cursor = db.cursor()
 
 print("DATABASE POSTGRESQL LIGADA")
 
+
+# ============================================================
+# TABELA DE JOGADORES
+# ============================================================
+
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS jogadores (
     user_id BIGINT PRIMARY KEY,
@@ -522,6 +527,20 @@ CREATE TABLE IF NOT EXISTS jogadores (
 """)
 
 
+# ============================================================
+# ADICIONAR PONTOS DE RANK
+# ============================================================
+
+cursor.execute("""
+ALTER TABLE jogadores
+ADD COLUMN IF NOT EXISTS pontos_rank INTEGER DEFAULT 0
+""")
+
+
+# ============================================================
+# TABELA DE TREINOS
+# ============================================================
+
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS treinos (
     user_id BIGINT PRIMARY KEY,
@@ -534,7 +553,27 @@ CREATE TABLE IF NOT EXISTS treinos (
 )
 """)
 
+
+# ============================================================
+# GUARDAR ALTERAÇÕES
+# ============================================================
+
 db.commit()
+
+
+# ============================================================
+# CARREGAR RANKS
+# ============================================================
+
+cursor.execute("""
+SELECT tipo, nome, ordem, pontos_necessarios, cargo_id
+FROM ranks
+ORDER BY tipo, ordem
+""")
+
+ranks = cursor.fetchall()
+
+print(f"RANKS CARREGADOS: {len(ranks)}")
 
 
 # ============================================================
