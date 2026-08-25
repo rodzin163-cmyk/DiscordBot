@@ -2732,6 +2732,9 @@ class HelpView(discord.ui.View):
                     "`!level @jogador`\n"
                     "Mostra o nível e progresso de outro jogador.\n\n"
 
+                    "`!rank`\n"
+                    "Mostra o teu rank e os teus pontos de rank.\n\n"
+
                     "`!perfil`\n"
                     "Mostra o teu perfil completo."
                 ),
@@ -2936,6 +2939,15 @@ class HelpView(discord.ui.View):
             )
 
             embed.add_field(
+                name="🏅 Missões",
+                value=(
+                    "`!missao`\n"
+                    "Abre o sistema de missões para registar uma missão."
+                ),
+                inline=False
+            )
+
+            embed.add_field(
                 name="🎁 Mystery Box",
                 value=(
                     "`!addbox @jogador <quantidade>`\n"
@@ -3004,7 +3016,7 @@ async def help(ctx):
 
     embed.add_field(
         name="👤 Jogador",
-        value="Perfil, atributos, nível, bónus e inventário.",
+        value="Perfil, atributos, nível, rank, bónus e inventário.",
         inline=True
     )
 
@@ -3029,7 +3041,7 @@ async def help(ctx):
     if is_staff(ctx.author):
         embed.add_field(
             name="🛡️ Staff",
-            value="Comandos exclusivos da Staff.",
+            value="Comandos exclusivos da Staff, incluindo missões.",
             inline=True
         )
 
@@ -3041,6 +3053,8 @@ async def help(ctx):
         embed=embed,
         view=HelpView(ctx.author)
     )
+
+
 # ============================================================
 # OBTER EQUIPAMENTOS
 # ============================================================
