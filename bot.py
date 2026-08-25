@@ -814,6 +814,8 @@ class ModalOponentesMissao(discord.ui.Modal):
                 ephemeral=True
             )
 
+        await interaction.response.defer(ephemeral=True)
+
         # ====================================================
         # LER QUANTIDADES
         # ====================================================
@@ -836,7 +838,7 @@ class ModalOponentesMissao(discord.ui.Modal):
 
         except ValueError:
 
-            return await interaction.response.send_message(
+            return await interaction.followup.send(
                 "❌ As quantidades devem ser números inteiros "
                 "iguais ou superiores a 0.",
                 ephemeral=True
@@ -880,7 +882,7 @@ class ModalOponentesMissao(discord.ui.Modal):
 
         if not detalhes:
 
-            return await interaction.response.send_message(
+            return await interaction.followup.send(
                 "❌ Tens de registar pelo menos um inimigo derrotado.",
                 ephemeral=True
             )
@@ -996,7 +998,7 @@ class ModalOponentesMissao(discord.ui.Modal):
             text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ • Sistema de Missões"
         )
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             embed=embed,
             ephemeral=True
         )
