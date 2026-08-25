@@ -512,6 +512,7 @@ print("DATABASE POSTGRESQL LIGADA")
 # ============================================================
 
 def obter_pontos_rank(user_id):
+
     cursor.execute("""
         SELECT pontos_rank
         FROM progresso_rank
@@ -521,6 +522,7 @@ def obter_pontos_rank(user_id):
     resultado = cursor.fetchone()
 
     if resultado is None:
+
         cursor.execute("""
             INSERT INTO progresso_rank (user_id, pontos_rank)
             VALUES (%s, 0)
@@ -528,12 +530,58 @@ def obter_pontos_rank(user_id):
         """, (user_id,))
 
         db.commit()
+
         return 0
 
     return resultado[0]
 
 
-def obter_rank(user_id, tipo):
+# ============================================================
+# OBTER RANK PELO CARGO
+# ============================================================
+
+def obter_rank(user_id, tipo, membro=None):
+
+    # --------------------------------------------------------
+    # 1. Procurar o maior rank que o jogador possui
+    # através dos cargos do Discord
+    # --------------------------------------------------------
+
+    if membro is not None:
+
+        cargos_usuario = {
+            cargo.id
+            for cargo in membro.roles
+        }
+
+        cursor.execute("""
+            SELECT nome, ordem, pontos_necessarios, cargo_id
+            FROM ranks
+            WHERE tipo = %s
+            AND cargo_id = ANY(%s)
+            ORDER BY ordem DESC
+            LIMIT 1
+        """, (tipo, list(cargos_usuario)))
+
+        resultado = cursor.fetchone()
+
+        if resultado is not None:
+
+            pontos = obter_pontos_rank(user_id)
+
+            return {
+                "nome": resultado[0],
+                "ordem": resultado[1],
+                "pontos_necessarios": resultado[2],
+                "cargo_id": resultado[3],
+                "pontos": pontos
+            }
+
+    # --------------------------------------------------------
+    # 2. Caso não tenha nenhum cargo de rank,
+    # determinar o rank através dos pontos
+    # --------------------------------------------------------
+
     pontos = obter_pontos_rank(user_id)
 
     cursor.execute("""
@@ -557,6 +605,32 @@ def obter_rank(user_id, tipo):
         "cargo_id": resultado[3],
         "pontos": pontos
     }
+
+
+# ============================================================
+# DETETAR RAÇA DO PERSONAGEM
+# ============================================================
+
+def obter_raca(membro):
+
+    cargos = {
+        cargo.id
+        for cargo in membro.roles
+    }
+
+    # Humano
+    if CARGO_HUMANO in cargos:
+        return "Humano"
+
+    # Oni
+    if CARGO_ONI in cargos:
+        return "Oni"
+
+    # Híbrido utiliza a progressão dos Onis
+    if CARGO_HIBRIDO in cargos:
+        return "Oni"
+
+    return None
 
 # ============================================================
 # DETETAR RAÇA DO PERSONAGEM
