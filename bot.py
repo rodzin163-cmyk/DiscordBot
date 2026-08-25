@@ -788,10 +788,10 @@ class ModalOponentesMissao(discord.ui.Modal):
 
         self.campos = []
 
-        for i, oponente in enumerate(oponentes):
+        for oponente in oponentes:
 
             campo = discord.ui.TextInput(
-                label=f"{oponente}",
+                label=oponente,
                 placeholder="Número de inimigos derrotados",
                 required=True,
                 min_length=1,
@@ -803,12 +803,20 @@ class ModalOponentesMissao(discord.ui.Modal):
 
     async def on_submit(self, interaction):
 
+        # ====================================================
+        # VERIFICAR NARRADOR
+        # ====================================================
+
         if not is_narrador(interaction.user):
 
             return await interaction.response.send_message(
-                "❌ Apenas Narradores podem utilizar esta interface.",
+                "❌ Apenas **Narradores** podem utilizar esta interface.",
                 ephemeral=True
             )
+
+        # ====================================================
+        # LER QUANTIDADES
+        # ====================================================
 
         quantidades = {}
 
@@ -834,9 +842,9 @@ class ModalOponentesMissao(discord.ui.Modal):
                 ephemeral=True
             )
 
-        # ----------------------------------------------------
+        # ====================================================
         # CALCULAR RECOMPENSAS
-        # ----------------------------------------------------
+        # ====================================================
 
         pontos_totais = 0
         xp_total = 0
@@ -849,24 +857,11 @@ class ModalOponentesMissao(discord.ui.Modal):
             if quantidade <= 0:
                 continue
 
-            recompensa = RECOMPENSAS_OPONENTES[
-                oponente
-            ]
+            recompensa = RECOMPENSAS_OPONENTES[oponente]
 
-            pontos = (
-                recompensa["pontos"]
-                * quantidade
-            )
-
-            xp = (
-                recompensa["xp"]
-                * quantidade
-            )
-
-            dinheiro = (
-                recompensa["dinheiro"]
-                * quantidade
-            )
+            pontos = recompensa["pontos"] * quantidade
+            xp = recompensa["xp"] * quantidade
+            dinheiro = recompensa["dinheiro"] * quantidade
 
             pontos_totais += pontos
             xp_total += xp
@@ -879,9 +874,9 @@ class ModalOponentesMissao(discord.ui.Modal):
                 f"💰 +{dinheiro} moedas"
             )
 
-        # ----------------------------------------------------
-        # CONFIRMAÇÃO
-        # ----------------------------------------------------
+        # ====================================================
+        # VERIFICAR SE HOUVE DERROTAS
+        # ====================================================
 
         if not detalhes:
 
@@ -890,25 +885,71 @@ class ModalOponentesMissao(discord.ui.Modal):
                 ephemeral=True
             )
 
+        # ====================================================
+        # DAR PONTOS DE RANK
+        # ====================================================
+
+        cursor.execute(
+            """
+            INSERT INTO progresso_rank (user_id, pontos_rank)
+            VALUES (%s, %s)
+            ON CONFLICT (user_id)
+            DO UPDATE SET pontos_rank =
+                progresso_rank.pontos_rank + EXCLUDED.pontos_rank
+            """,
+            (
+                self.jogador.id,
+                pontos_totais
+            )
+        )
+
+        db.commit()
+
+        # ====================================================
+        # DAR XP
+        # ====================================================
+
+        adicionar_xp(
+            self.jogador.id,
+            xp_total
+        )
+
+        # ====================================================
+        # DAR DINHEIRO
+        # ====================================================
+
+        adicionar_dinheiro(
+            self.jogador.id,
+            dinheiro_total
+        )
+
+        # ====================================================
+        # CONFIRMAÇÃO
+        # ====================================================
+
         embed = discord.Embed(
-            title="📜 Missão Registada",
+            title="📜 Missão Concluída",
             description=(
                 f"👤 **Jogador:** {self.jogador.mention}\n"
                 f"🧬 **Raça:** {self.raca}\n"
                 f"⚔️ **Rank da missão:** {self.rank_missao}\n\n"
                 + "\n\n".join(detalhes)
             ),
-            color=discord.Color.dark_red()
+            color=discord.Color.green()
         )
 
         embed.add_field(
-            name="🏆 Total da Missão",
+            name="🏆 Recompensas Recebidas",
             value=(
                 f"⭐ **+{pontos_totais} Pontos de Rank**\n"
                 f"✨ **+{xp_total} XP**\n"
                 f"💰 **+{dinheiro_total} moedas**"
             ),
             inline=False
+        )
+
+        embed.set_footer(
+            text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥙ • Sistema de Missões"
         )
 
         await interaction.response.send_message(
