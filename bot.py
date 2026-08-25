@@ -1718,12 +1718,24 @@ def obter_jogador(user_id):
     criar_jogador(user_id)
 
     cursor.execute(
-        "SELECT * FROM jogadores WHERE user_id = %s",
+        """
+        SELECT
+            user_id,
+            pontos,
+            velocidade,
+            forca,
+            resistencia,
+            manejo,
+            regeneracao,
+            folego,
+            sangue
+        FROM jogadores
+        WHERE user_id = %s
+        """,
         (user_id,)
     )
 
     return cursor.fetchone()
-
 # ============================================================
 # SISTEMA DE EQUIPAMENTOS
 # ============================================================
@@ -3562,6 +3574,7 @@ async def atributos(ctx, membro: discord.Member = None):
 
 
     await ctx.send(embed=embed)
+    
 # ============================================================
 # !ADD
 # ============================================================
