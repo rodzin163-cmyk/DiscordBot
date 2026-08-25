@@ -9,6 +9,21 @@ import random
 from datetime import datetime, timezone, timedelta
 
 # ============================================================
+# CONFIGURAÇÃO DO DISCORD
+# ============================================================
+
+intents = discord.Intents.default()
+intents.presences = True
+intents.members = True
+intents.message_content = True
+
+bot = commands.Bot(
+    command_prefix="!",
+    intents=intents,
+    help_command=None
+)
+
+# ============================================================
 # RECOMPENSAS MYSTERY BOX
 # ============================================================
 
@@ -1097,22 +1112,6 @@ CARGO_HINOTO = 1389238699124068444
 CARGO_ONI_TALENTOSO = 1389245570350321704
 
 CARGO_PRODIGIO = 1539055788352479264
-
-
-# ============================================================
-# CONFIGURAÇÃO DO DISCORD
-# ============================================================
-
-intents = discord.Intents.default()
-intents.presences = True
-intents.members = True
-intents.message_content = True
-
-bot = commands.Bot(
-    command_prefix="!",
-    intents=intents,
-    help_command=None
-)
 
 
 # ============================================================
