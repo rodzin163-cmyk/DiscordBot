@@ -2914,6 +2914,10 @@ class HelpView(discord.ui.View):
                 color=discord.Color.dark_red()
             )
 
+            # ------------------------------------------------
+            # 📊 PONTOS & ATRIBUTOS
+            # ------------------------------------------------
+
             embed.add_field(
                 name="📊 Pontos & Atributos",
                 value=(
@@ -2925,6 +2929,10 @@ class HelpView(discord.ui.View):
                 ),
                 inline=False
             )
+
+            # ------------------------------------------------
+            # ⭐ XP & LEVEL
+            # ------------------------------------------------
 
             embed.add_field(
                 name="⭐ XP & Level",
@@ -2938,14 +2946,32 @@ class HelpView(discord.ui.View):
                 inline=False
             )
 
+            # ------------------------------------------------
+            # 🏅 RANKS & MISSÕES
+            # ------------------------------------------------
+
             embed.add_field(
-                name="🏅 Missões",
+                name="🏅 Ranks & Missões",
                 value=(
+                    "`!addrank @jogador <quantidade>`\n"
+                    "Adiciona ou retira pontos de rank de um jogador.\n\n"
+
+                    "**Exemplos:**\n"
+                    "`!addrank @jogador 100`\n"
+                    "└ Adiciona 100 pontos de rank.\n\n"
+
+                    "`!addrank @jogador -50`\n"
+                    "└ Retira 50 pontos de rank.\n\n"
+
                     "`!missao`\n"
                     "Abre o sistema de missões para registar uma missão."
                 ),
                 inline=False
             )
+
+            # ------------------------------------------------
+            # 🎁 MYSTERY BOX
+            # ------------------------------------------------
 
             embed.add_field(
                 name="🎁 Mystery Box",
@@ -2956,6 +2982,10 @@ class HelpView(discord.ui.View):
                 inline=False
             )
 
+            # ------------------------------------------------
+            # 💰 DINHEIRO
+            # ------------------------------------------------
+
             embed.add_field(
                 name="💰 Dinheiro",
                 value=(
@@ -2964,6 +2994,10 @@ class HelpView(discord.ui.View):
                 ),
                 inline=False
             )
+
+            # ------------------------------------------------
+            # 🏪 GESTÃO DA LOJA
+            # ------------------------------------------------
 
             embed.add_field(
                 name="🏪 Gestão da Loja",
@@ -2977,6 +3011,10 @@ class HelpView(discord.ui.View):
                 inline=False
             )
 
+            # ------------------------------------------------
+            # ⚔️ NICHIRIN
+            # ------------------------------------------------
+
             embed.add_field(
                 name="⚔️ Nichirin",
                 value=(
@@ -2989,6 +3027,10 @@ class HelpView(discord.ui.View):
                 inline=False
             )
 
+        # ====================================================
+        # FOOTER
+        # ====================================================
+
         embed.set_footer(
             text="👻 Last Soul • Usa o menu acima para navegar"
         )
@@ -2998,6 +3040,10 @@ class HelpView(discord.ui.View):
             view=self
         )
 
+
+# ============================================================
+# COMANDO !HELP
+# ============================================================
 
 @bot.command()
 async def help(ctx):
@@ -3039,9 +3085,10 @@ async def help(ctx):
     )
 
     if is_staff(ctx.author):
+
         embed.add_field(
             name="🛡️ Staff",
-            value="Comandos exclusivos da Staff, incluindo missões.",
+            value="Comandos exclusivos da Staff, incluindo ranks e missões.",
             inline=True
         )
 
@@ -3053,7 +3100,6 @@ async def help(ctx):
         embed=embed,
         view=HelpView(ctx.author)
     )
-
 
 # ============================================================
 # OBTER EQUIPAMENTOS
@@ -6092,6 +6138,100 @@ async def rank(ctx):
     )
 
     await ctx.send(embed=embed)
+
+# ============================================================
+# !ADDRANK — ADICIONAR / RETIRAR PONTOS DE RANK
+# ============================================================
+
+@bot.command()
+async def addrank(ctx, membro: discord.Member, quantidade: int):
+
+    # --------------------------------------------------------
+    # VERIFICAR STAFF
+    # --------------------------------------------------------
+
+    if not is_staff(ctx.author):
+        return await ctx.send(
+            "❌ Apenas membros da **Staff** podem utilizar este comando."
+        )
+
+    # --------------------------------------------------------
+    # OBTER PONTOS ATUAIS
+    # --------------------------------------------------------
+
+    pontos_atuais = obter_pontos_rank(membro.id)
+
+    # --------------------------------------------------------
+    # CALCULAR NOVOS PONTOS
+    # --------------------------------------------------------
+
+    novos_pontos = pontos_atuais + quantidade
+
+    # Impedir pontos negativos
+    if novos_pontos < 0:
+        novos_pontos = 0
+
+    # --------------------------------------------------------
+    # ATUALIZAR BASE DE DADOS
+    # --------------------------------------------------------
+
+    cursor.execute(
+        """
+        INSERT INTO progresso_rank (user_id, pontos_rank)
+        VALUES (%s, %s)
+        ON CONFLICT (user_id)
+        DO UPDATE SET pontos_rank = EXCLUDED.pontos_rank
+        """,
+        (
+            membro.id,
+            novos_pontos
+        )
+    )
+
+    db.commit()
+
+    # --------------------------------------------------------
+    # ATUALIZAR RANK AUTOMATICAMENTE
+    # --------------------------------------------------------
+
+    novo_rank = await atualizar_rank_automaticamente(membro)
+
+    # --------------------------------------------------------
+    # MENSAGEM
+    # --------------------------------------------------------
+
+    if quantidade > 0:
+
+        mensagem = (
+            f"⭐ Foram adicionados **{quantidade} pontos de rank** a "
+            f"{membro.mention}."
+        )
+
+    elif quantidade < 0:
+
+        mensagem = (
+            f"⭐ Foram retirados **{abs(quantidade)} pontos de rank** de "
+            f"{membro.mention}."
+        )
+
+    else:
+
+        mensagem = (
+            f"ℹ️ Nenhuma alteração foi feita nos pontos de rank de "
+            f"{membro.mention}."
+        )
+
+    mensagem += (
+        f"\n\n📊 **Pontos de Rank:** `{novos_pontos}`"
+    )
+
+    if novo_rank is not None:
+
+        mensagem += (
+            f"\n🏅 **Rank:** `{novo_rank[0]}`"
+        )
+
+    await ctx.send(mensagem)
     
 # ============================================================
 # TOKEN
