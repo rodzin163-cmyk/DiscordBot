@@ -886,6 +886,16 @@ class ModalOponentesMissao(discord.ui.Modal):
             )
 
         # ====================================================
+        # GUARDAR RANK ANTERIOR
+        # ====================================================
+
+        rank_anterior = obter_rank(
+            self.jogador.id,
+            self.raca,
+            self.jogador
+        )
+
+        # ====================================================
         # DAR PONTOS DE RANK
         # ====================================================
 
@@ -924,17 +934,43 @@ class ModalOponentesMissao(discord.ui.Modal):
         )
 
         # ====================================================
+        # ATUALIZAR RANK AUTOMATICAMENTE
+        # ====================================================
+
+        novo_rank = await atualizar_rank_automaticamente(
+            self.jogador
+        )
+
+        # ====================================================
         # CONFIRMAÇÃO
         # ====================================================
 
+        descricao = (
+            f"👤 **Jogador:** {self.jogador.mention}\n"
+            f"🧬 **Raça:** {self.raca}\n"
+            f"⚔️ **Rank da missão:** {self.rank_missao}\n\n"
+            + "\n\n".join(detalhes)
+        )
+
+        # ====================================================
+        # INFORMAR PROMOÇÃO
+        # ====================================================
+
+        if (
+            rank_anterior is not None
+            and novo_rank is not None
+            and novo_rank["ordem"] > rank_anterior["ordem"]
+        ):
+
+            descricao += (
+                f"\n\n🎉 **PROMOÇÃO DE RANK!**\n"
+                f"🏅 **{rank_anterior['nome']}** → "
+                f"**{novo_rank['nome']}**"
+            )
+
         embed = discord.Embed(
             title="📜 Missão Concluída",
-            description=(
-                f"👤 **Jogador:** {self.jogador.mention}\n"
-                f"🧬 **Raça:** {self.raca}\n"
-                f"⚔️ **Rank da missão:** {self.rank_missao}\n\n"
-                + "\n\n".join(detalhes)
-            ),
+            description=descricao,
             color=discord.Color.green()
         )
 
@@ -948,15 +984,22 @@ class ModalOponentesMissao(discord.ui.Modal):
             inline=False
         )
 
+        if novo_rank is not None:
+
+            embed.add_field(
+                name="🏅 Rank Atual",
+                value=f"**{novo_rank['nome']}**",
+                inline=False
+            )
+
         embed.set_footer(
-            text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥙ • Sistema de Missões"
+            text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ • Sistema de Missões"
         )
 
         await interaction.response.send_message(
             embed=embed,
             ephemeral=True
         )
-
 
 # ============================================================
 # VIEW — ESCOLHER RANK DA MISSÃO
