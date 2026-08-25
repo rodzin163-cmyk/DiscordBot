@@ -5102,7 +5102,7 @@ async def rank(ctx):
         )
 
     # --------------------------------------------------------
-    # OBTER RANK ATRAVÉS DOS CARGOS
+    # OBTER RANK ATRAVÉS DO CARGO
     # --------------------------------------------------------
 
     rank_atual = obter_rank(
@@ -5117,25 +5117,67 @@ async def rank(ctx):
             "❌ Não foi possível determinar o teu rank."
         )
 
-    pontos = rank_atual["pontos"]
+    # --------------------------------------------------------
+    # PONTOS
+    #
+    # O cargo define o mínimo de pontos do rank.
+    # Se a BD tiver menos pontos que esse valor,
+    # usamos o valor mínimo do próprio rank.
+    # --------------------------------------------------------
+
+    pontos_guardados = obter_pontos_rank(ctx.author.id)
+
+    pontos_minimos_rank = rank_atual["pontos_necessarios"]
+
+    pontos = max(
+        pontos_guardados,
+        pontos_minimos_rank
+    )
 
     # --------------------------------------------------------
-    # PROCURAR PRÓXIMO RANK
+    # SE OS PONTOS DA BD ESTAVAM ABAIXO DO RANK,
+    # ATUALIZAR AUTOMATICAMENTE
+    # --------------------------------------------------------
+
+    if pontos_guardados < pontos_minimos_rank:
+
+        cursor.execute("""
+            INSERT INTO progresso_rank (user_id, pontos_rank)
+            VALUES (%s, %s)
+            ON CONFLICT (user_id)
+            DO UPDATE SET pontos_rank = %s
+        """, (
+            ctx.author.id,
+            pontos_minimos_rank,
+            pontos_minimos_rank
+        ))
+
+        db.commit()
+
+    # --------------------------------------------------------
+    # PROCURAR O PRÓXIMO RANK
+    #
+    # IMPORTANTE:
+    # Procuramos pela ORDEM do rank atual,
+    # e não simplesmente pelos pontos.
     # --------------------------------------------------------
 
     cursor.execute("""
-        SELECT nome, pontos_necessarios, cargo_id
+        SELECT nome, ordem, pontos_necessarios, cargo_id
         FROM ranks
         WHERE tipo = %s
-        AND pontos_necessarios > %s
-        ORDER BY pontos_necessarios ASC
+        AND ordem > %s
+        ORDER BY ordem ASC
         LIMIT 1
-    """, (raca, pontos))
+    """, (
+        raca,
+        rank_atual["ordem"]
+    ))
 
     proximo = cursor.fetchone()
 
     # --------------------------------------------------------
-    # VERIFICAR SE EXISTE PRÓXIMO RANK
+    # VERIFICAR PRÓXIMO RANK
     # --------------------------------------------------------
 
     if proximo is None:
@@ -5147,7 +5189,7 @@ async def rank(ctx):
     else:
 
         nome_proximo = proximo[0]
-        pontos_proximo = proximo[1]
+        pontos_proximo = proximo[2]
 
         falta = max(
             0,
