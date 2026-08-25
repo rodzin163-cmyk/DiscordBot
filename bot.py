@@ -441,7 +441,7 @@ CARGO_MODERADOR = 1388566955069280287
 CARGO_SUPERVISAO = 1388567043628077197
 CARGO_ADM = 1388566858390573246
 CARGO_FUNDADOR = 1386441239125295237
-
+CARGO_NARRADOR = 1386441241742278716
 
 
 # ============================================================
@@ -457,10 +457,630 @@ def is_staff(member):
         CARGO_FUNDADOR
     ]
 
-
     return any(
         cargo.id in cargos_staff
         for cargo in member.roles
+    )
+
+
+# ============================================================
+# VERIFICAÇÃO DE NARRADOR
+# ============================================================
+
+def is_narrador(member):
+
+    return any(
+        cargo.id == CARGO_NARRADOR
+        for cargo in member.roles
+    )
+
+# ============================================================
+# RECOMPENSAS DOS OPONENTES
+# ============================================================
+
+RECOMPENSAS_OPONENTES = {
+
+    # ========================================================
+    # RANK 1
+    # ========================================================
+
+    "Mizunoto": {
+        "pontos": 10,
+        "xp": 350,
+        "dinheiro": 1000
+    },
+
+    "Oni Figurante": {
+        "pontos": 10,
+        "xp": 350,
+        "dinheiro": 1000
+    },
+
+    "Mizunoe": {
+        "pontos": 15,
+        "xp": 500,
+        "dinheiro": 1200
+    },
+
+    "Oni Desconhecido": {
+        "pontos": 15,
+        "xp": 500,
+        "dinheiro": 1200
+    },
+
+    # ========================================================
+    # RANK 2
+    # ========================================================
+
+    "Kanoto": {
+        "pontos": 20,
+        "xp": 650,
+        "dinheiro": 1400
+    },
+
+    "Oni Popular": {
+        "pontos": 20,
+        "xp": 650,
+        "dinheiro": 1400
+    },
+
+    "Kanoe": {
+        "pontos": 25,
+        "xp": 800,
+        "dinheiro": 1600
+    },
+
+    "Oni Semi-Prodígio": {
+        "pontos": 25,
+        "xp": 800,
+        "dinheiro": 1600
+    },
+
+    # ========================================================
+    # RANK 3
+    # ========================================================
+
+    "Tsuchinoto": {
+        "pontos": 30,
+        "xp": 950,
+        "dinheiro": 1800
+    },
+
+    "Oni Prodígio": {
+        "pontos": 30,
+        "xp": 950,
+        "dinheiro": 1800
+    },
+
+    "Tsuchinoe": {
+        "pontos": 35,
+        "xp": 1100,
+        "dinheiro": 2000
+    },
+
+    "Oni Talentoso": {
+        "pontos": 35,
+        "xp": 1100,
+        "dinheiro": 2000
+    },
+
+    # ========================================================
+    # RANK 4
+    # ========================================================
+
+    "Hinoto": {
+        "pontos": 40,
+        "xp": 1250,
+        "dinheiro": 2200
+    },
+
+    "Oni Semi-Lunar": {
+        "pontos": 40,
+        "xp": 1250,
+        "dinheiro": 2200
+    },
+
+    "Hinoe": {
+        "pontos": 45,
+        "xp": 1400,
+        "dinheiro": 2400
+    },
+
+    "Oni Lunar": {
+        "pontos": 45,
+        "xp": 1400,
+        "dinheiro": 2400
+    },
+
+    # ========================================================
+    # RANK 5
+    # ========================================================
+
+    "Kinoto": {
+        "pontos": 50,
+        "xp": 1550,
+        "dinheiro": 2600
+    },
+
+    "Kinoe": {
+        "pontos": 60,
+        "xp": 1700,
+        "dinheiro": 2800
+    },
+
+    "Lua Inferior": {
+        "pontos": 60,
+        "xp": 1700,
+        "dinheiro": 2800
+    },
+
+    # ========================================================
+    # RANK 6
+    # ========================================================
+
+    "Hashira": {
+        "pontos": 70,
+        "xp": 2000,
+        "dinheiro": 3000
+    },
+
+    "Lua Superior": {
+        "pontos": 70,
+        "xp": 2000,
+        "dinheiro": 3000
+    }
+}
+
+# ============================================================
+# OPONENTES DISPONÍVEIS POR RANK DE MISSÃO
+# ============================================================
+
+OPONENTES_MISSAO = {
+
+    1: {
+        "Humano": [
+            "Oni Figurante",
+            "Oni Desconhecido"
+        ],
+        "Oni": [
+            "Mizunoto",
+            "Mizunoe"
+        ]
+    },
+
+    2: {
+        "Humano": [
+            "Oni Popular",
+            "Oni Semi-Prodígio"
+        ],
+        "Oni": [
+            "Kanoto",
+            "Kanoe"
+        ]
+    },
+
+    3: {
+        "Humano": [
+            "Oni Prodígio"
+        ],
+        "Oni": [
+            "Tsuchinoto",
+            "Tsuchinoe"
+        ]
+    },
+
+    4: {
+        "Humano": [
+            "Oni Talentoso",
+            "Oni Semi-Lunar"
+        ],
+        "Oni": [
+            "Hinoto",
+            "Hinoe"
+        ]
+    },
+
+    5: {
+        "Humano": [
+            "Oni Lunar",
+            "Lua Inferior"
+        ],
+        "Oni": [
+            "Kinoto",
+            "Kinoe"
+        ]
+    },
+
+    6: {
+        "Humano": [
+            "Lua Inferior",
+            "Lua Superior"
+        ],
+        "Oni": [
+            "Kinoe",
+            "Hashira"
+        ]
+    }
+}
+
+# ============================================================
+# VIEW — ESCOLHER OPONENTES DA MISSÃO
+# ============================================================
+
+class EscolherOponentesMissao(discord.ui.View):
+
+    def __init__(self, jogador, rank_missao, raca):
+        super().__init__(timeout=180)
+
+        self.jogador = jogador
+        self.rank_missao = rank_missao
+        self.raca = raca
+
+        self.oponentes = OPONENTES_MISSAO[
+            rank_missao
+        ][raca]
+
+    @discord.ui.button(
+        label="Registar derrotas",
+        style=discord.ButtonStyle.danger,
+        emoji="⚔️"
+    )
+    async def registar(
+        self,
+        interaction,
+        button
+    ):
+
+        if not is_narrador(interaction.user):
+
+            return await interaction.response.send_message(
+                "❌ Apenas Narradores podem utilizar esta interface.",
+                ephemeral=True
+            )
+
+        await interaction.response.send_modal(
+            ModalOponentesMissao(
+                self.jogador,
+                self.rank_missao,
+                self.raca,
+                self.oponentes
+            )
+        )
+
+
+# ============================================================
+# MODAL — QUANTIDADE DE OPONENTES
+# ============================================================
+
+class ModalOponentesMissao(discord.ui.Modal):
+
+    def __init__(
+        self,
+        jogador,
+        rank_missao,
+        raca,
+        oponentes
+    ):
+
+        super().__init__(
+            title=f"Missão Rank {rank_missao}"
+        )
+
+        self.jogador = jogador
+        self.rank_missao = rank_missao
+        self.raca = raca
+        self.oponentes = oponentes
+
+        self.campos = []
+
+        for i, oponente in enumerate(oponentes):
+
+            campo = discord.ui.TextInput(
+                label=f"{oponente}",
+                placeholder="Número de inimigos derrotados",
+                required=True,
+                min_length=1,
+                max_length=4
+            )
+
+            self.campos.append(campo)
+            self.add_item(campo)
+
+    async def on_submit(self, interaction):
+
+        if not is_narrador(interaction.user):
+
+            return await interaction.response.send_message(
+                "❌ Apenas Narradores podem utilizar esta interface.",
+                ephemeral=True
+            )
+
+        quantidades = {}
+
+        try:
+
+            for oponente, campo in zip(
+                self.oponentes,
+                self.campos
+            ):
+
+                quantidade = int(campo.value)
+
+                if quantidade < 0:
+                    raise ValueError
+
+                quantidades[oponente] = quantidade
+
+        except ValueError:
+
+            return await interaction.response.send_message(
+                "❌ As quantidades devem ser números inteiros "
+                "iguais ou superiores a 0.",
+                ephemeral=True
+            )
+
+        # ----------------------------------------------------
+        # CALCULAR RECOMPENSAS
+        # ----------------------------------------------------
+
+        pontos_totais = 0
+        xp_total = 0
+        dinheiro_total = 0
+
+        detalhes = []
+
+        for oponente, quantidade in quantidades.items():
+
+            if quantidade <= 0:
+                continue
+
+            recompensa = RECOMPENSAS_OPONENTES[
+                oponente
+            ]
+
+            pontos = (
+                recompensa["pontos"]
+                * quantidade
+            )
+
+            xp = (
+                recompensa["xp"]
+                * quantidade
+            )
+
+            dinheiro = (
+                recompensa["dinheiro"]
+                * quantidade
+            )
+
+            pontos_totais += pontos
+            xp_total += xp
+            dinheiro_total += dinheiro
+
+            detalhes.append(
+                f"⚔️ **{oponente}** × {quantidade}\n"
+                f"└ ⭐ +{pontos} pontos | "
+                f"✨ +{xp} XP | "
+                f"💰 +{dinheiro} moedas"
+            )
+
+        # ----------------------------------------------------
+        # CONFIRMAÇÃO
+        # ----------------------------------------------------
+
+        if not detalhes:
+
+            return await interaction.response.send_message(
+                "❌ Tens de registar pelo menos um inimigo derrotado.",
+                ephemeral=True
+            )
+
+        embed = discord.Embed(
+            title="📜 Missão Registada",
+            description=(
+                f"👤 **Jogador:** {self.jogador.mention}\n"
+                f"🧬 **Raça:** {self.raca}\n"
+                f"⚔️ **Rank da missão:** {self.rank_missao}\n\n"
+                + "\n\n".join(detalhes)
+            ),
+            color=discord.Color.dark_red()
+        )
+
+        embed.add_field(
+            name="🏆 Total da Missão",
+            value=(
+                f"⭐ **+{pontos_totais} Pontos de Rank**\n"
+                f"✨ **+{xp_total} XP**\n"
+                f"💰 **+{dinheiro_total} moedas**"
+            ),
+            inline=False
+        )
+
+        await interaction.response.send_message(
+            embed=embed,
+            ephemeral=True
+        )
+
+
+# ============================================================
+# VIEW — ESCOLHER RANK DA MISSÃO
+# ============================================================
+
+class EscolherRankMissao(discord.ui.View):
+
+    def __init__(self, jogador):
+        super().__init__(timeout=120)
+        self.jogador = jogador
+
+    async def verificar_narrador(self, interaction):
+
+        if not is_narrador(interaction.user):
+
+            await interaction.response.send_message(
+                "❌ Apenas Narradores podem utilizar esta interface.",
+                ephemeral=True
+            )
+
+            return False
+
+        return True
+
+    async def escolher_rank(
+        self,
+        interaction,
+        rank_missao
+    ):
+
+        if not await self.verificar_narrador(interaction):
+            return
+
+        raca = obter_raca(self.jogador)
+
+        if raca is None:
+
+            return await interaction.response.send_message(
+                "❌ Este jogador não possui um cargo de "
+                "Humano, Oni ou Híbrido.",
+                ephemeral=True
+            )
+
+        oponentes = OPONENTES_MISSAO[
+            rank_missao
+        ][raca]
+
+        lista_oponentes = "\n".join(
+            f"⚔️ **{oponente}**"
+            for oponente in oponentes
+        )
+
+        embed = discord.Embed(
+            title=f"⚔️ Missão Rank {rank_missao}",
+            description=(
+                f"👤 **Jogador:** {self.jogador.mention}\n"
+                f"🧬 **Raça:** {raca}\n\n"
+                "### Oponentes disponíveis\n"
+                f"{lista_oponentes}\n\n"
+                "Clique abaixo para indicar quantos "
+                "oponentes foram derrotados."
+            ),
+            color=discord.Color.dark_red()
+        )
+
+        await interaction.response.edit_message(
+            embed=embed,
+            view=EscolherOponentesMissao(
+                self.jogador,
+                rank_missao,
+                raca
+            )
+        )
+
+    @discord.ui.button(
+        label="Rank 1",
+        style=discord.ButtonStyle.secondary
+    )
+    async def rank1(self, interaction, button):
+        await self.escolher_rank(interaction, 1)
+
+    @discord.ui.button(
+        label="Rank 2",
+        style=discord.ButtonStyle.secondary
+    )
+    async def rank2(self, interaction, button):
+        await self.escolher_rank(interaction, 2)
+
+    @discord.ui.button(
+        label="Rank 3",
+        style=discord.ButtonStyle.primary
+    )
+    async def rank3(self, interaction, button):
+        await self.escolher_rank(interaction, 3)
+
+    @discord.ui.button(
+        label="Rank 4",
+        style=discord.ButtonStyle.primary
+    )
+    async def rank4(self, interaction, button):
+        await self.escolher_rank(interaction, 4)
+
+    @discord.ui.button(
+        label="Rank 5",
+        style=discord.ButtonStyle.danger
+    )
+    async def rank5(self, interaction, button):
+        await self.escolher_rank(interaction, 5)
+
+    @discord.ui.button(
+        label="Rank 6",
+        style=discord.ButtonStyle.danger
+    )
+    async def rank6(self, interaction, button):
+        await self.escolher_rank(interaction, 6)
+
+
+# ============================================================
+# !MISSAO
+# ============================================================
+
+@bot.command()
+async def missao(ctx, membro: discord.Member = None):
+
+    # --------------------------------------------------------
+    # VERIFICAR NARRADOR
+    # --------------------------------------------------------
+
+    if not is_narrador(ctx.author):
+
+        return await ctx.send(
+            "❌ Apenas **Narradores** podem utilizar o comando `!missao`."
+        )
+
+    # --------------------------------------------------------
+    # VERIFICAR JOGADOR
+    # --------------------------------------------------------
+
+    if membro is None:
+
+        return await ctx.send(
+            "❌ Tens de mencionar o jogador que realizou a missão.\n\n"
+            "Exemplo:\n"
+            "`!missao @Jogador`"
+        )
+
+    # --------------------------------------------------------
+    # VERIFICAR RAÇA
+    # --------------------------------------------------------
+
+    raca = obter_raca(membro)
+
+    if raca is None:
+
+        return await ctx.send(
+            "❌ Esse jogador não possui um cargo de "
+            "**Humano, Oni ou Híbrido**."
+        )
+
+    # --------------------------------------------------------
+    # EMBED
+    # --------------------------------------------------------
+
+    embed = discord.Embed(
+        title="📜 Registo de Missão",
+        description=(
+            f"👤 **Jogador:** {membro.mention}\n"
+            f"🧬 **Raça:** {raca}\n\n"
+            "Selecione abaixo o **Rank da missão narrada**."
+        ),
+        color=discord.Color.dark_red()
+    )
+
+    embed.set_footer(
+        text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ • Sistema de Missões"
+    )
+
+    await ctx.send(
+        embed=embed,
+        view=EscolherRankMissao(membro)
     )
 
 # ============================================================
