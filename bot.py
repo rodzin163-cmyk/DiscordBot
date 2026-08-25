@@ -959,13 +959,13 @@ class ModalOponentesMissao(discord.ui.Modal):
         if (
             rank_anterior is not None
             and novo_rank is not None
-            and novo_rank["ordem"] > rank_anterior["ordem"]
+            and novo_rank[1] > rank_anterior["ordem"]
         ):
 
             descricao += (
                 f"\n\n🎉 **PROMOÇÃO DE RANK!**\n"
                 f"🏅 **{rank_anterior['nome']}** → "
-                f"**{novo_rank['nome']}**"
+                f"**{novo_rank[0]}**"
             )
 
         embed = discord.Embed(
@@ -988,7 +988,7 @@ class ModalOponentesMissao(discord.ui.Modal):
 
             embed.add_field(
                 name="🏅 Rank Atual",
-                value=f"**{novo_rank['nome']}**",
+                value=f"**{novo_rank[0]}**",
                 inline=False
             )
 
@@ -1000,6 +1000,7 @@ class ModalOponentesMissao(discord.ui.Modal):
             embed=embed,
             ephemeral=True
         )
+
 
 # ============================================================
 # VIEW — ESCOLHER RANK DA MISSÃO
