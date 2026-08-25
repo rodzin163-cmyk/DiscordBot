@@ -5085,25 +5085,46 @@ async def bonus(ctx, membro: discord.Member = None):
 @bot.command()
 async def rank(ctx):
 
+    # --------------------------------------------------------
+    # DETETAR RAÇA
+    # --------------------------------------------------------
+
     raca = obter_raca(ctx.author)
 
     if raca is None:
+
         return await ctx.send(
-            "❌ Não tens um cargo de personagem válido "
-            "(Humano, Oni ou Híbrido)."
+            "❌ Não tens um cargo de personagem válido.\n\n"
+            "Precisas de um dos seguintes cargos:\n"
+            "👤 Humano\n"
+            "👹 Oni\n"
+            "🩸 Híbrido"
         )
 
-    rank_atual = obter_rank(ctx.author.id, raca)
+    # --------------------------------------------------------
+    # OBTER RANK ATRAVÉS DOS CARGOS
+    # --------------------------------------------------------
+
+    rank_atual = obter_rank(
+        ctx.author.id,
+        raca,
+        ctx.author
+    )
 
     if rank_atual is None:
+
         return await ctx.send(
-            "❌ Não foi possível encontrar o teu rank."
+            "❌ Não foi possível determinar o teu rank."
         )
 
     pontos = rank_atual["pontos"]
 
+    # --------------------------------------------------------
+    # PROCURAR PRÓXIMO RANK
+    # --------------------------------------------------------
+
     cursor.execute("""
-        SELECT nome, pontos_necessarios
+        SELECT nome, pontos_necessarios, cargo_id
         FROM ranks
         WHERE tipo = %s
         AND pontos_necessarios > %s
@@ -5113,22 +5134,62 @@ async def rank(ctx):
 
     proximo = cursor.fetchone()
 
+    # --------------------------------------------------------
+    # VERIFICAR SE EXISTE PRÓXIMO RANK
+    # --------------------------------------------------------
+
     if proximo is None:
-        proximo_texto = "🏆 **Rank máximo**"
-    else:
-        nome_proximo = proximo[0]
-        pontos_proximo = proximo[1]
-        falta = pontos_proximo - pontos
 
         proximo_texto = (
-            f"⬆️ Próximo rank: **{nome_proximo}**\n"
-            f"📈 Necessários: **{pontos_proximo} pontos**\n"
-            f"🎯 Faltam: **{falta} pontos**"
+            "🏆 **Último rank disponível**"
         )
+
+    else:
+
+        nome_proximo = proximo[0]
+        pontos_proximo = proximo[1]
+
+        falta = max(
+            0,
+            pontos_proximo - pontos
+        )
+
+        # ----------------------------------------------------
+        # RANKS QUE NÃO PODEM SER ATRIBUÍDOS AUTOMATICAMENTE
+        # ----------------------------------------------------
+
+        if nome_proximo in (
+            "Hashira",
+            "Lua Inferior",
+            "Lua Superior"
+        ):
+
+            proximo_texto = (
+                f"⬆️ Próximo rank: **{nome_proximo}**\n"
+                f"📊 Necessários: **{pontos_proximo} pontos**\n"
+                f"🎯 Faltam: **{falta} pontos**\n\n"
+                "⚠️ Este rank requer atribuição manual."
+            )
+
+        else:
+
+            proximo_texto = (
+                f"⬆️ Próximo rank: **{nome_proximo}**\n"
+                f"📊 Necessários: **{pontos_proximo} pontos**\n"
+                f"🎯 Faltam: **{falta} pontos**"
+            )
+
+    # --------------------------------------------------------
+    # EMBED
+    # --------------------------------------------------------
 
     embed = discord.Embed(
         title=f"⚔️ Rank de {ctx.author.display_name}",
         color=discord.Color.dark_red()
+    )
+
+    embed.set_thumbnail(
+        url=ctx.author.display_avatar.url
     )
 
     embed.add_field(
@@ -5145,14 +5206,18 @@ async def rank(ctx):
 
     embed.add_field(
         name="⭐ Pontos de Rank",
-        value=str(pontos),
+        value=f"{pontos} pontos",
         inline=True
     )
 
     embed.add_field(
-        name="📊 Progressão",
+        name="📈 Progressão",
         value=proximo_texto,
         inline=False
+    )
+
+    embed.set_footer(
+        text="👻 . 𝗟ᥲ᥉t 𝗦᥆ᥙᥣ • Sistema de Ranks"
     )
 
     await ctx.send(embed=embed)
