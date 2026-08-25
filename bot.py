@@ -1266,6 +1266,115 @@ def obter_rank(user_id, tipo, membro=None):
         "pontos": pontos
     }
 
+# ============================================================
+# ATUALIZAR RANK AUTOMATICAMENTE
+# ============================================================
+
+async def atualizar_rank_automaticamente(membro):
+
+    # --------------------------------------------------------
+    # Verificar a raça do jogador
+    # --------------------------------------------------------
+
+    tipo = obter_raca(membro)
+
+    if tipo is None:
+        return None
+
+    # Híbridos não entram no sistema automático por enquanto
+    if tipo == "Híbrido":
+        return None
+
+    # --------------------------------------------------------
+    # Obter pontos atuais
+    # --------------------------------------------------------
+
+    pontos = obter_pontos_rank(membro.id)
+
+    # --------------------------------------------------------
+    # Procurar o maior rank que os pontos permitem
+    # --------------------------------------------------------
+
+    cursor.execute("""
+        SELECT nome, ordem, pontos_necessarios, cargo_id
+        FROM ranks
+        WHERE tipo = %s
+        AND pontos_necessarios <= %s
+        ORDER BY ordem DESC
+        LIMIT 1
+    """, (tipo, pontos))
+
+    novo_rank = cursor.fetchone()
+
+    if novo_rank is None:
+        return None
+
+    nome_novo = novo_rank[0]
+    ordem_nova = novo_rank[1]
+    cargo_novo_id = novo_rank[3]
+
+    # --------------------------------------------------------
+    # Não promover automaticamente para Lua Inferior/Superior
+    # --------------------------------------------------------
+
+    if nome_novo in ["Lua Inferior", "Lua Superior"]:
+        return None
+
+    # --------------------------------------------------------
+    # Obter o cargo novo
+    # --------------------------------------------------------
+
+    cargo_novo = membro.guild.get_role(cargo_novo_id)
+
+    if cargo_novo is None:
+        return None
+
+    # --------------------------------------------------------
+    # Procurar cargos de rank da mesma raça
+    # --------------------------------------------------------
+
+    cursor.execute("""
+        SELECT cargo_id
+        FROM ranks
+        WHERE tipo = %s
+    """, (tipo,))
+
+    cargos_rank = {
+        linha[0]
+        for linha in cursor.fetchall()
+    }
+
+    # --------------------------------------------------------
+    # Remover cargos de rank antigos
+    # --------------------------------------------------------
+
+    cargos_remover = [
+        cargo
+        for cargo in membro.roles
+        if cargo.id in cargos_rank
+        and cargo.id != cargo_novo_id
+    ]
+
+    if cargos_remover:
+
+        await membro.remove_roles(
+            *cargos_remover,
+            reason="Atualização automática de Rank"
+        )
+
+    # --------------------------------------------------------
+    # Adicionar o novo cargo
+    # --------------------------------------------------------
+
+    if cargo_novo not in membro.roles:
+
+        await membro.add_roles(
+            cargo_novo,
+            reason="Promoção automática de Rank"
+        )
+
+    return novo_rank
+
 
 # ============================================================
 # DETETAR RAÇA DO PERSONAGEM
